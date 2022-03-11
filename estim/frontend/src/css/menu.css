@@ -1,0 +1,79 @@
+.customer_infos {
+    background-color: #eff4fc;
+    border: 1px solid #0e57a7;
+    border-radius: 7px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+}
+
+.customer_info {
+    display: flex;
+    margin-bottom: 10px;
+    word-break: break-all;
+}
+
+.customer_info:last-of-type {
+    margin-bottom: 0;
+}
+
+.customer_label {
+    width: 60px;
+    flex: 0 0 60px;
+    margin-right: 10px;
+}
+
+.menu_list li {
+    margin-bottom: 5px;
+    text-align: center;
+    color: #0886c4;
+    border: 1px solid #0886c4;
+    border-radius: 8px;
+    background-image: url("../images/item1_trans.png");
+    background-size: contain;
+    background-position: 5% 0;
+    background-repeat: no-repeat;
+}
+
+.menu_list li:nth-of-type(2) {
+    background-image: url("../images/item2_trans.png");
+    background-position: 30% 0;
+}
+
+.menu_list li:nth-of-type(3) {
+    background-image: url("../images/item3_trans.png");
+    background-position: 75% 0;
+}
+
+.menu_list li:nth-of-type(4) {
+    background-image: url("../images/item4_trans.png");
+    background-position: 95% 0;
+}
+
+.menu_list a {
+    width: 100%;
+    position: relative;
+    padding: 15px 0;
+}
+
+.menu_list .main_img {
+    position: absolute;
+    height: 100%;
+    top: 5px;
+}
+
+
+/* 메뉴용 헤더 */
+
+.menu_header {
+    border: 0;
+    padding: 15px;
+}
+
+.btn_back {
+    width: 50px;
+    height: 18px;
+    background-image: url("../images/btn_back.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: left;
+}
