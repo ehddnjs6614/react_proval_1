@@ -13,63 +13,63 @@ const Main = () => {
   return (
     <div className="main_page">
       <header>
-        <div class="logo_box">
+        <div className="logo_box">
           <h1>
             <Link to="main">
               <img src={logo} alt="proval로고" />
             </Link>
           </h1>
-          <div class="page_title">견적요청</div>
+          <div className="page_title">견적요청</div>
         </div>
-        <Link to="/menu" class="gnb_btn">
+        <Link to="/menu" className="gnb_btn">
           <span></span>
           <span></span>
           <span></span>
         </Link>
       </header>
-      <div class="wrap big_padding">
-        <div class="main_list">
+      <div className="wrap big_padding">
+        <div className="main_list">
           <ul>
-            <li class="main_item">
+            <li className="main_item">
               <Link to="/request">
-                <div class="main_img">
+                <div className="main_img">
                   <img src={item1} alt="" />
                 </div>
-                <div class="item_title">견적 요청</div>
+                <div className="item_title">견적 요청</div>
               </Link>
             </li>
-            <li class="main_item">
+            <li className="main_item">
               <Link
                 onClick={() => {
                   window.location.replace('/officerCrown')
                 }}
               >
-                <div class="main_img">
+                <div className="main_img">
                   <img src={item2} alt="" />
                 </div>
-                <div class="item_title">견적 관리</div>
+                <div className="item_title">견적 관리</div>
               </Link>
             </li>
-            <li class="main_item">
+            <li className="main_item">
               <Link
                 onClick={() => {
                   window.location.replace('/formBox')
                 }}
               >
-                <div class="main_img">
+                <div className="main_img">
                   <img src={item3} alt="" />
                 </div>
 
-                <div class="item_title">견적양식 보관함</div>
+                <div className="item_title">견적양식 보관함</div>
               </Link>
             </li>
-            <li class="main_item">
+            <li className="main_item">
               <Link
                 onClick={() => {
                   window.location.replace('/orderList')
                 }}
               >
-                <div class="main_img">
+                <div className="main_img">
                   <img src={item4} alt="" />
                 </div>
                 <div className="item_title">주문목록</div>

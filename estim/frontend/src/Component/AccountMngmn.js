@@ -20,17 +20,18 @@ const AccountMngmn = () => {
   let REC_ADDRData = sessionStorage.getItem('REC_ADDR')
   let REC_CONTData = sessionStorage.getItem('REC_CONT')
 
-  const [EMAIL, setEMAIL] = useState('')
+  const [EMAIL, setEMAIL] = useState(EMAILData)
   const [U_ID, setU_ID] = useState('')
-  const [U_PW, setU_PW] = useState('')
-  const [CUST_NAME, setCUST_NAME] = useState('')
-  const [TEL_NO, setTEL_NO] = useState('')
-  const [HP_NO, setHP_NO] = useState('')
-  const [MAN_NAME, setMAN_NAME] = useState('')
-  const [MAN_POSI, setMAN_POSI] = useState('')
-  const [REC_NAME, setREC_NAME] = useState('')
-  const [REC_ADDR, setREC_ADDR] = useState('')
-  const [REC_CONT, setREC_CONT] = useState('')
+  const [U_PW, setU_PW] = useState(U_PWData)
+  const [CUST_NAME, setCUST_NAME] = useState(CUST_NAMElData)
+  const [TEL_NO, setTEL_NO] = useState(TEL_NOData)
+  const [HP_NO, setHP_NO] = useState(HP_NOData)
+  const [MAN_NAME, setMAN_NAME] = useState(MAN_NAMEData)
+  const [MAN_POSI, setMAN_POSI] = useState(MAN_POSIData)
+  const [REC_NAME, setREC_NAME] = useState(REC_NAMEData)
+  const [REC_ADDR, setREC_ADDR] = useState(REC_ADDRData)
+  const [REC_CONT, setREC_CONT] = useState(REC_CONTData)
+  console.log(EMAIL)
 
   const updateCUST_NAME = e => {
     setCUST_NAME(e.target.value)
@@ -126,159 +127,159 @@ const AccountMngmn = () => {
   return (
     <div>
       <header>
-        <div class="logo_box">
+        <div className="logo_box">
           <h1>
             <Link to="/main">
               <img src={logo} alt="proval로고" />
             </Link>
           </h1>
-          <div class="page_title"></div>
+          <div className="page_title"></div>
         </div>
-        <Link to="/menu" class="gnb_btn">
+        <Link to="/menu" className="gnb_btn">
           <span></span>
           <span></span>
           <span></span>
         </Link>
       </header>
-      <div class="wrap">
-        <div class="customer">
-          <div class="customer_img">
+      <div className="wrap">
+        <div className="customer">
+          <div className="customer_img">
             <img src={person} alt="" />
           </div>
-          <div class="customer_name">{U_IDData}</div>
+          <div className="customer_name">{U_IDData}</div>
         </div>
-        <form action="post" class="form_acntMngmn">
-          <div class="input_group label_basic">
-            <label for="" class="form_label">
+        <form action="post" className="form_acntMngmn">
+          <div className="input_group label_basic">
+            <label htmlFor="" className="form_label">
               아이디
             </label>
-            <input type="text" class="form_input" value={U_IDData} />
+            <input type="text" className="form_input" value={U_IDData} />
           </div>
-          <div class="input_group label_basic">
-            <label for="" class="form_label">
+          <div className="input_group label_basic">
+            <label htmlFor="" className="form_label">
               업체명
             </label>
             <input
               type="text"
-              class="form_input"
+              className="form_input"
               value={CUST_NAME}
               onChange={updateCUST_NAME}
               placeholder={CUST_NAMElData}
             ></input>
           </div>
-          <div class="input_group label_basic">
-            <label for="" class="form_label">
+          <div className="input_group label_basic">
+            <label htmlFor="" className="form_label">
               비밀번호
             </label>
             <input
               type="password"
-              class="form_input"
+              className="form_input"
               value={U_PW}
               onChange={updateU_PW}
-              placeholder={U_PWData}
+              placeholder="******"
             />
           </div>
-          <div class="input_group label_basic">
-            <label for="" class="form_label">
+          <div className="input_group label_basic">
+            <label htmlFor="" className="form_label">
               이메일
             </label>
             <input
               type="email"
-              class="form_input"
+              className="form_input"
               value={EMAIL}
               onChange={updateEMAIL}
               placeholder={EMAILData}
             />
           </div>
-          <div class="input_group label_basic">
-            <label for="" class="form_label">
+          <div className="input_group label_basic">
+            <label htmlFor="" className="form_label">
               사무실전화번호
             </label>
             <input
               type="tel"
-              class="form_input"
+              className="form_input"
               value={TEL_NO}
               onChange={updateTEL_NO}
               placeholder={TEL_NOData}
             />
           </div>
           <br />
-          <div class="input_group label_basic">
-            <label for="" class="form_label">
+          <div className="input_group label_basic">
+            <label htmlFor="" className="form_label">
               담당자
             </label>
             <input
               type="text"
-              class="form_input"
+              className="form_input"
               value={MAN_NAME}
               onChange={updateMAN_NAME}
               placeholder={MAN_NAMEData}
             />
           </div>
-          <div class="input_group label_basic">
-            <label for="" class="form_label">
+          <div className="input_group label_basic">
+            <label htmlFor="" className="form_label">
               직함
             </label>
             <input
               type="text"
-              class="form_input"
+              className="form_input"
               value={MAN_POSI}
               onChange={updateMAN_POSI}
               placeholder={MAN_POSIData}
             />
           </div>
-          <div class="input_group label_basic">
-            <label for="" class="form_label">
+          <div className="input_group label_basic">
+            <label htmlFor="" className="form_label">
               연락처
             </label>
             <input
               type="tel"
-              class="form_input"
+              className="form_input"
               value={HP_NO}
               onChange={updatesetHP_NO}
               placeholder={HP_NOData}
             />
           </div>
           <br />
-          <div class="input_group label_basic">
-            <label for="" class="form_label">
+          <div className="input_group label_basic">
+            <label htmlFor="" className="form_label">
               수령인
             </label>
             <input
               type="text"
-              class="form_input"
+              className="form_input"
               value={REC_NAME}
               onChange={updateREC_NAME}
               placeholder={REC_NAMEData}
             />
           </div>
-          <div class="input_group label_basic">
-            <label for="" class="form_label">
+          <div className="input_group label_basic">
+            <label htmlFor="" className="form_label">
               주소
             </label>
             <input
               type="text"
-              class="form_input"
+              className="form_input"
               value={REC_ADDR}
               onChange={updateREC_ADDR}
               placeholder={REC_ADDRData}
             />
           </div>
-          <div class="input_group label_basic">
-            <label for="" class="form_label">
+          <div className="input_group label_basic">
+            <label htmlFor="" className="form_label">
               연락처
             </label>
             <input
               type="tel"
-              class="form_input"
+              className="form_input"
               value={REC_CONT}
               onChange={updateREC_CONT}
               placeholder={REC_CONTData}
             />
           </div>
-          <div class="btns_center">
+          <div className="btns_center">
             <button
-              class="btn btn_md btn_shadow"
+              className="btn btn_md btn_shadow"
               style={{ marginRight: '15px' }}
               onClick={onClickDELETE}
             >
@@ -286,22 +287,22 @@ const AccountMngmn = () => {
             </button>
 
             <button
-              class="btn btn_md btn_shadow"
+              className="btn btn_md btn_shadow"
               onClick={onClickUpdate}
-              disabled={
-                !(
-                  CUST_NAME &&
-                  U_PW &&
-                  EMAIL &&
-                  TEL_NO &&
-                  MAN_NAME &&
-                  MAN_POSI &&
-                  HP_NO &&
-                  REC_NAME &&
-                  REC_ADDR &&
-                  REC_CONT
-                )
-              }
+              // disabled={
+              //   !(
+              //     CUST_NAME &&
+              //     U_PW &&
+              //     EMAIL &&
+              //     TEL_NO &&
+              //     MAN_NAME &&
+              //     MAN_POSI &&
+              //     HP_NO &&
+              //     REC_NAME &&
+              //     REC_ADDR &&
+              //     REC_CONT
+              //   )
+              // }
             >
               수정
             </button>

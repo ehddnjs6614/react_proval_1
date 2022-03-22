@@ -1,18 +1,374 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import logo from '../images/logo.png'
 import '../images/btn_date.png'
 import $ from 'jquery'
 import 'jquery-ui-dist/jquery-ui'
 import 'swiper/css/bundle'
-// import 'swiper/css'
 import 'swiper/css/pagination'
-
 import { Swiper, SwiperSlide } from 'swiper/react'
-
 import { A11y, Navigation, Pagination, Scrollbar } from 'swiper'
+import { getDateStr, getLastDay, getLastDayStr, getSubStr, getValidUserID } from '../Utils/EstimUtils'
+import axios from 'axios'
+import { useHistory } from 'react-router-dom'
+import { API_URL } from '../_api/types'
+
+let date_to = new Date();
+let date_from = new Date();
+date_from.setDate(1);
+date_from.setMonth(date_to.getMonth() - 1);
 
 const OfficerCrown = () => {
+  //0.........1........
+  //0123456789012345678
+  //2022-03-11 10:00:00
+  let str_date_from = getSubStr(date_from.toISOString(), 0, 10);
+  let arr_from = str_date_from.split('-');
+  let str_from_y = arr_from[0];
+  let str_from_m = arr_from[1];
+  let str_from_d = arr_from[2];
+
+  let str_date_to = getSubStr(date_to.toISOString(), 0, 10);
+  let arr_to = str_date_to.split('-');
+  let str_to_y = arr_to[0];
+  let str_to_m = arr_to[1];
+  let str_to_d = arr_to[2];
+
+  /**
+   * 조회옵션
+   */
+  let style_background_normal = {maxWidth:'70px',marginRight:'7px',backgroundColor:'gray'};
+  let style_background_hilight = {maxWidth:'70px',marginRight:'7px',backgroundColor:'#113c8a'};
+
+  let str_order_by = 'A';  /* A:최신순,D:과거순 */
+  let str_est_clsfy = '1'; /* 1:신규,2:완료,3:리비전 */
+
+  setOrderBy(str_order_by);
+
+  let [estim_list, estim_setInputData] = useState([{
+    PROJECT: '',
+    EST_NO: '',
+    M_IL: '',
+    REV_NO: '',
+  }]);
+  let [estim_lastIdx, estim_setLastIdx] = useState(0);
+
+  let [estim_details, details_setInputData] = useState([
+  {
+    COMP:'',
+    FACT:'',
+    EST_NO:'',
+    REV_NO:'',
+    TAG_NO:'',
+    SERIAL_NO:'',
+    BODY_TYPE:'',
+    BODY_SIZE:'',
+    BODY:'',
+    RATING:'',
+    PLUG_DISC_BALL:'',
+    END_CONNECTION:'',
+    ACTUATOR_TYPE:'',
+    HAND_WHEEL:'',
+    MEDIUM_1:'',
+    FR_MAX:'',
+    FR_NOR:'',
+    FR_MIN :'',
+    FR_UNIT:'',
+    IP_MAX:'',
+    IP_NOR:'',
+    IP_MIN:'',
+    IP_UNIT:'',
+    OP_MAX:'',
+    OP_NOR:'',
+    OP_MIN:'',
+    OP_UNIT:'',
+    IT_MAX:'',
+    IT_NOR:'',
+    IT_MIN:'',
+    IT_UNIT:'',
+    D_NOR:'',
+    D_UNIT:'',
+    MW_NOR:'',
+    MW_UNIT:'',
+    IP_POSITIONER:'',
+    SOLENOID_CONNECT_TYPE:'',
+    IP_ENCLOSURE:'',
+    IP_TYPE:'',
+    PT_TRANSMIT:'',
+    SOLENOID_MATERIAL:'',
+    SOLENOID_MFG:'',
+    LIMIT_MFG:'',
+    AIR_SET_CONNECT_TYPE:'',
+    IP_CONDUIT_AIR_CONNECT:'',
+    OTHER_REQUEST:'',
+    QTY:'',
+    UNIT_PRICE:'',
+    AMT:'',
+    NOTE:'',
+    STAT:'',
+    M_ID:'',
+    M_IL:'',
+    U_ID:'',
+    U_IL:''
+  }]);
+  let [details_lastIdx, details_setLastIdx] = useState(0);
+
+  let [rev_list, rev_setInputData] = useState([{
+    PROJECT: '',
+    EST_NO: '',
+    M_IL: '',
+    REV_NO: '',
+    CUR_REV_NO: '',
+  }]);
+  let [rev_lastIdx, rev_setLastIdx] = useState(0);
+
+  let TAG_NO_selected = null;
+
+  function makeSearchDate(){
+    str_date_from = getSubStr(date_from.toISOString(), 0, 10);
+    str_date_to = getSubStr(date_to.toISOString(), 0, 10);
+
+    arr_from = str_date_from.split('-');
+    str_from_y = arr_from[0];
+    str_from_m = arr_from[1];
+    str_from_d = arr_from[2];
+
+    arr_to = str_date_to.split('-');
+    str_to_y = arr_to[0];
+    str_to_m = arr_to[1];
+    str_to_d = arr_to[2];
+  }
+
+  function setOrderBy(od){
+    if (od == 'A') {
+      $("#sch_order_asc").css("backgroundColor", 'rgb(17, 60, 138)');
+      $("#sch_order_desc").css("backgroundColor", 'rgb(128, 128, 128)');
+    }
+    else {
+      $("#sch_order_asc").css("backgroundColor", 'rgb(128, 128, 128)');
+      $("#sch_order_desc").css("backgroundColor", 'rgb(17, 60, 138)');
+    }
+  }
+
+  function okSearchSettings() {
+    date_from = new Date($("#searchStartDate").val());
+    date_to = new Date($("#searchEndDate").val());
+
+    if ($("#sch_order_desc").css("backgroundColor") == 'rgb(128, 128, 128)')
+      str_order_by = 'A';
+    else
+      str_order_by = 'D';
+    
+    makeSearchDate();
+
+    $("#modalDate").fadeOut();
+
+    getEstimationList("from",0);
+  }
+
+  async function getEstimationList (target, dir=0) {
+    const user_id = getValidUserID();
+    if (!user_id) {
+      alert('로그인 후 사용하세요!');
+      return false;
+    }
+
+    if (target == 'from') {
+      date_from.setDate(1);
+      date_from.setMonth(date_from.getMonth()+(dir));
+    } else if (target == 'to') {
+      date_to.setMonth(date_to.getMonth()+(dir));
+    }
+
+    makeSearchDate();
+
+    if (target == 'from') {
+      $("span[id='sch_year_from']").text(arr_from[0]+'년');
+      $("span[id='sch_month_from']").text(arr_from[1]+'월');
+    } else if (target == 'to') {
+      $("span[id='sch_year_to']").text(arr_to[0]+'년');
+      $("span[id='sch_month_to']").text(arr_to[1]+'월');
+    }
+
+    $("ul[id='estim_list']").html("<div style='text-align:center;'>견적 자료 조회중...</div>");
+    
+    try {
+      const res = await axios.post(`${API_URL}estimation/list`,{
+        M_ID: user_id,
+        fromdate: str_date_from,
+        todate: str_date_to,
+        orderby: str_order_by,
+        EST_CLSFY: str_est_clsfy
+      });
+      if (res.data.result == 'success') {
+        const rows = await res.data.data.map((rowData) => (
+          estim_setLastIdx(estim_lastIdx+1),
+          {
+            PROJECT: rowData.PROJECT,
+            EST_NO: rowData.EST_NO,
+            M_IL: rowData.M_IL,
+            REV_NO: rowData.REV_NO,
+          })
+        );
+        $("ul[id='estim_list']").html("");
+        estim_list = rows.slice();
+        estim_setInputData(estim_list);
+      } else {
+        $("ul[id='estim_list']").html("<div style='text-align:center; color: red;'>견적 자료가 없습니다.</div>");
+      }
+    } catch (error) {
+      alert(error);
+    }
+  }
+  useEffect((e)=>{
+    getEstimationList("from",0)
+  },[]);
+
+  async function getRevisionList (est_no, rev_no, project) {
+    let modal_list = $("#modalRevision ul.revision_list");
+
+    try {
+      const res = await axios.get(`${API_URL}estimation/${est_no}/${rev_no}`);
+      if (res.data.result == 'success') {
+        //const rows = res.data.data;
+        const rows = await res.data.data.map((rowData) => (
+          rev_setLastIdx(rev_lastIdx+1),
+          {
+            PROJECT: project,
+            EST_NO: rowData.EST_NO,
+            M_IL: rowData.M_IL,
+            REV_NO: rowData.REV_NO,
+            CUR_REV_NO: rev_no,
+          })
+        );
+        rev_list = rows.slice();
+        rev_setInputData(rev_list);
+      } else {
+        $(modal_list).html("<div style='text-align:center; color: red;'>다른 리비전이 없습니다.</div>");
+      }
+    } catch (error) {
+      alert(error);
+    }
+  }
+  async function getEstimationRevision (est_no, rev_no, project) {
+    $("#modalRevision").fadeOut();
+
+    try {
+        const res = await axios.post(`${API_URL}estimation/detail/${est_no}/${rev_no}`);
+        if (res.data.result == 'success') {
+          const rows = await res.data.data.map((rowData) => (
+            estim_setLastIdx(estim_lastIdx+1),
+            {
+              PROJECT: project,
+              EST_NO: rowData.EST_NO,
+              M_IL: rowData.M_IL,
+              REV_NO: rowData.REV_NO,
+            })
+          )
+          estim_list = rows.slice();
+          estim_setInputData(estim_list);
+        } else {
+          $("ul[id='estim_list']").html("<div style='text-align:center; color: red;'>견적 자료가 없습니다.</div>");
+        }
+    } catch (error) {
+      alert(error);
+    }
+  }
+
+  function getDetailStatus(target) {
+    var toggleBox = $(target).closest('li').find('.toggle_box')
+    if (toggleBox.hasClass('open_box') == true) {
+      return "shown";
+    } else {
+      return "hidden";
+    }
+  }
+
+  function toggleDetail(target){
+      var toggleBox = $(target).closest('li').find('.toggle_box')
+      toggleBox.toggleClass('open_box')
+      if (toggleBox.hasClass('open_box')) {
+        $(target).find('span').text('간단히')
+        $(target).addClass('open_btn')
+        return "shown";
+      } else {
+        $(target).find('span').text('상세정보조회')
+        $(target).removeClass('open_btn')
+        return "hidden";
+      }
+  }
+
+  async function getEstimationDetails (target,est_no, rev_no, tag_no=null) {
+    let target_button = $(target).parent("button");
+    let target_li = $(target_button).parent("li");
+    let target_ul = $(target_li).parent("ul");
+
+    if ($(target).prop("tagName") == 'BUTTON') {
+      target_button = target;
+      target = $(target_button).children("span");
+      target_li = $(target_button).parent("li");
+      target_ul = $(target_li).parent("ul");
+    }
+
+    toggleDetail(target_button);
+
+    //상세보기를 닫을 때는 조회하지 않고 리턴
+    if (getDetailStatus(target_button) == "hidden") {
+      return false;
+    }
+
+    $.each($(target_ul).children("li"),function(k,li){
+      let btn = $(li).children("button.toggle_btn");
+      if (getDetailStatus(btn) == "shown"){
+        if ($(li).attr("id") != $(target_li).attr("id")) {
+          toggleDetail(btn);
+        }
+      }
+    });
+
+    try {
+      const res = await axios.post((!tag_no)?`${API_URL}estimation/detail/${est_no}/${rev_no}`:`${API_URL}estimation/detail/${est_no}/${rev_no}/${tag_no}`);
+      if (res.data.result == 'success') {
+        // const rows = await res.data.data.map((rowData) => (
+        //   details_setLastIdx(details_lastIdx+1),
+        //   {
+        //     EST_NO: rowData.EST_NO,
+        //     M_IL: rowData.M_IL,
+        //     REV_NO: rowData.REV_NO,
+        //   })
+        // )
+        // details_setInputData(estim_details.concat(rows));
+        TAG_NO_selected = null;
+        estim_details = res.data.data.slice()
+        details_setInputData(estim_details);
+      } else {
+        alert(res.data.message);
+      }
+    } catch (error) {
+      alert(error);
+    }
+  }
+  /**
+   * 주어진 TAG_NO를 현재 TAG_NO로 설정
+   * @param {*} tag 
+   * @returns 
+   */
+  function selectTAG(tag) {
+    if (TAG_NO_selected == tag)
+      return false;
+
+    TAG_NO_selected = tag;
+  }
+  /**
+   * 상세내역 배열 데이터에서 현재 선택된 TAG_NO에 해당하는 인덱스를 얻는다
+   */
+  function getDetailIndex() {
+    for (let index = 0; index < estim_details.length; index++) {
+      if (TAG_NO_selected == estim_details[index].TAG_NO)
+        return index;
+    }
+  }
+
   $(function () {
     // 컨텐츠 기본높이
     function contentHeight() {
@@ -54,7 +410,7 @@ const OfficerCrown = () => {
     })
 
     $('.modal .btn_cancle, .btn_modal_cancle').on('click', function () {
-      $(this).closest('.modal').fadeOut().removeClass('.modal_show')
+      $(this).closest('.modal').fadeOut().removeClass('modal_show')
     })
 
     // datepicker ==============================
@@ -64,34 +420,8 @@ const OfficerCrown = () => {
       nextText: '다음 달', // 마우스 오버시 다음달 텍스트
       closeText: '닫기', // 닫기 버튼 텍스트 변경
       currentText: '오늘', // 오늘 텍스트 변경
-      monthNames: [
-        '1월',
-        '2월',
-        '3월',
-        '4월',
-        '5월',
-        '6월',
-        '7월',
-        '8월',
-        '9월',
-        '10월',
-        '11월',
-        '12월',
-      ], //한글 캘린더중 월 표시를 위한 부분
-      monthNamesShort: [
-        '1월',
-        '2월',
-        '3월',
-        '4월',
-        '5월',
-        '6월',
-        '7월',
-        '8월',
-        '9월',
-        '10월',
-        '11월',
-        '12월',
-      ], //한글 캘린더 중 월 표시를 위한 부분
+      monthNames: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'], //한글 캘린더중 월 표시를 위한 부분
+      monthNamesShort: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'], //한글 캘린더 중 월 표시를 위한 부분
       dayNames: ['일', '월', '화', '수', '목', '금', '토'], //한글 캘린더 요일 표시 부분
       dayNamesShort: ['일', '월', '화', '수', '목', '금', '토'], //한글 요일 표시 부분
       dayNamesMin: ['일', '월', '화', '수', '목', '금', '토'], // 한글 요일 표시 부분
@@ -111,7 +441,7 @@ const OfficerCrown = () => {
       var myDuration = $(this).attr('data-duration')
       setSearchDate(myDuration)
     })
-
+    
     function setSearchDate(start) {
       var num = start.substring(0, 1)
       var str = start.substring(1, 2)
@@ -201,7 +531,7 @@ const OfficerCrown = () => {
         } else {
           offset = offset - $('.square_box_wrap').width()
         }
-        console.log(offset)
+        //console.log(offset)
         $('.square_box').css('transform', 'translateX(' + -offset + 'px)')
       }
     })
@@ -231,23 +561,26 @@ const OfficerCrown = () => {
     })
 
     // 상세정보 버튼
-    $('.toggle_btn').on('click', function () {
-      var toggleBox = $(this).closest('li').find('.toggle_box')
-      toggleBox.toggleClass('open_box')
-      if (toggleBox.hasClass('open_box')) {
-        $(this).find('span').text('간단히')
-        $(this).addClass('open_btn')
-      } else {
-        $(this).find('span').text('상세정보조회')
-        $(this).removeClass('open_btn')
-      }
-    })
+    // $('.toggle_btn').on('click', function () {
+    //   var toggleBox = $(this).closest('li').find('.toggle_box')
+    //   toggleBox.toggleClass('open_box')
+    //   if (toggleBox.hasClass('open_box')) {
+    //     $(this).find('span').text('간단히')
+    //     $(this).addClass('open_btn')
+    //   } else {
+    //     $(this).find('span').text('상세정보조회')
+    //     $(this).removeClass('open_btn')
+    //   }
+    // })
     //  비밀번호 찾기 이메일 주소
     $('#findIdModal').on('click', function () {
       $('.find_email').text($('#findID').val())
     })
   })
 
+  //////////////////////////////////////////////////////////////////////
+  // HTML
+  //////////////////////////////////////////////////////////////////////
   return (
     <div>
       <header>
@@ -285,11 +618,18 @@ const OfficerCrown = () => {
         <div class="full_wrap_pd cont">
           <div class="flex_box date_box">
             <div class="left_box">
-              <span class="year">2021년</span>
+              <span class="year" id="sch_year_from" style={{marginRight:'10px'}}>{str_from_y}년</span>
               <div class="swiper_select_box">
-                <button class="prev_btn"></button>
-                <span class="swiper_cont">2월</span>
-                <button class="next_btn"></button>
+                <button class="prev_btn" id="btn_prev_from" onClick={()=>getEstimationList('from',-1)}></button>
+                <span class="swiper_cont" id="sch_month_from" style={{padding:'0 7px'}}>{str_from_m}월</span>
+                <button class="next_btn" id="btn_next_from" onClick={()=>getEstimationList('from',1)}></button>
+              </div>
+              <span style={{marginLeft:'5px',marginRight:'5px'}}>~</span>
+              <span class="year" id="sch_year_to" style={{marginRight:'10px'}}>{str_to_y}년</span>
+              <div class="swiper_select_box">
+                <button class="prev_btn" id="btn_prev_to" onClick={()=>getEstimationList('to',-1)}></button>
+                <span class="swiper_cont" id="sch_month_to" style={{padding:'0 7px'}}>{str_to_m}월</span>
+                <button class="next_btn" id="btn_next_to" onClick={()=>getEstimationList('to',1)}></button>
               </div>
             </div>
             <div class="right_box">
@@ -302,21 +642,24 @@ const OfficerCrown = () => {
             </div>
           </div>
           <div class="select_list">
-            <ul>
-              <li>
+            <ul id="estim_list">
+              {/* ======================== 견적 목록 시작 ========================== */
+              estim_list.map(function(row, index){
+                return(
+              <li id={`estim_${index+1}`} key={index+1}>
                 <div class="list_li list_head">
                   <div class="table_title">PROJECT</div>
-                  <div class="table_desc">삼성물산 #1</div>
+                  <div class="table_desc">{row.PROJECT}</div>
                 </div>
                 <div class="list_middle_box">
                   <div class="list_middle_left">
                     <div class="list_li">
                       <div class="table_title">견적 번호</div>
-                      <div class="table_desc">YA211203-036</div>
+                      <div class="table_desc">{row.EST_NO}</div>
                     </div>
                     <div class="list_li">
                       <div class="table_title">견적 요청일</div>
-                      <div class="table_desc">21.02.15</div>
+                      <div class="table_desc">{row.M_IL}</div>
                     </div>
                   </div>
                   <div class="list_middle_right">
@@ -333,15 +676,11 @@ const OfficerCrown = () => {
                 <div class="list_li">
                   <div class="list_middle_left list_li">
                     <div class="table_title">리비전</div>
-                    <div class="table_desc">D</div>
+                    <div class="table_desc">{row.REV_NO}</div>
                   </div>
                   <div class="list_middle_right mini_btn_box">
-                    <button
-                      class="btn btn_wh modal_btn"
-                      data-modal="modalRevision"
-                    >
-                      조회
-                    </button>
+                    <button class="btn btn_wh modal_btn" name="sch_rev_btn" data-modal="modalRevision" onClick={()=>getRevisionList(row.EST_NO,row.REV_NO,row.PROJECT)}>조회</button>
+                    {/*<button class="btn btn_wh modal_btn" name="sch_rev_btn" data-modal="modalRevision">조회</button>*/}
                   </div>
                 </div>
                 <div class="toggle_box">
@@ -349,15 +688,26 @@ const OfficerCrown = () => {
                     <div class="table_title">TAG NO.</div>
                     <div class="table_desc tag_box">
                       <ul class="tag_list">
-                        <li>
-                          <button class="btn_tag">FC603</button>
-                        </li>
-                        <li class="tag_active">
-                          <button class="btn_tag">FC604</button>
-                        </li>
-                        <li>
-                          <button class="btn_tag">FC605</button>
-                        </li>
+                      {
+                        estim_details.map(function(row, index) {
+                          if (!TAG_NO_selected) {
+                            TAG_NO_selected = row.TAG_NO;
+                          }
+                          if (TAG_NO_selected == row.TAG_NO) {
+                            return(
+                              <li class="tag_active">
+                                <button class="btn_tag" onClick={()=>selectTAG(row.TAG_NO)}>{row.TAG_NO}</button>
+                              </li>
+                            )
+                          }else{
+                            return(
+                              <li>
+                                <button class="btn_tag" onClick={()=>selectTAG(row.TAG_NO)}>{row.TAG_NO}</button>
+                              </li>
+                            )
+                          }
+                        })
+                      }
                       </ul>
                     </div>
                   </div>
@@ -404,8 +754,6 @@ const OfficerCrown = () => {
                       }}
                       autoHeight
                       scrollbar={{ draggable: true }}
-                      onSwiper={swiper => console.log(swiper)}
-                      onSlideChange={() => console.log('slide change')}
                     >
                       {/* <!-- Swiper --> */}
 
@@ -419,28 +767,28 @@ const OfficerCrown = () => {
                               <li>
                                 <div class="check_title">Valve type</div>
                                 <div class="check_val">
-                                  Controal Globe(2way)
+                                  Controal Globe({estim_details[getDetailIndex()].BODY_TYPE})
                                 </div>
                               </li>
                               <li>
                                 <div class="check_title">Body Size</div>
-                                <div class="check_val">50A</div>
+                                <div class="check_val">{estim_details[getDetailIndex()].BODY_SIZE}</div>
                               </li>
                               <li>
                                 <div class="check_title">Body Material</div>
-                                <div class="check_val"></div>
+                                <div class="check_val">{estim_details[getDetailIndex()].BODY}</div>
                               </li>
                               <li>
                                 <div class="check_title">Body Rating</div>
-                                <div class="check_val"></div>
+                                <div class="check_val">{estim_details[getDetailIndex()].RATING}</div>
                               </li>
                               <li>
                                 <div class="check_title">Trim Material</div>
-                                <div class="check_val"></div>
+                                <div class="check_val">{estim_details[getDetailIndex()].PLUG_DISC_BALL}</div>
                               </li>
                               <li>
                                 <div class="check_title">End Connection</div>
-                                <div class="check_val"></div>
+                                <div class="check_val">{estim_details[getDetailIndex()].END_CONNECTION}</div>
                               </li>
                             </ul>
                           </div>
@@ -567,24 +915,27 @@ const OfficerCrown = () => {
                     <ul>
                       <li>
                         <div class="officer_title">견적접수</div>
-                        <div class="officer_date">2021.02.05</div>
+                        <div class="officer_date">{estim_details[getDetailIndex()].M_IL}</div>
                       </li>
                       <li class="now_state">
                         <div class="officer_title">접수중</div>
-                        <div class="officer_date">2021.02.05</div>
+                        <div class="officer_date">{estim_details[getDetailIndex()].M_IL}</div>
                       </li>
                       <li>
                         <div class="officer_title">견적완료</div>
-                        <div class="officer_date"></div>
+                        <div class="officer_date">{estim_details[getDetailIndex()].M_IL}</div>
                       </li>
                     </ul>
                   </div>
                 </div>
                 {/* <!-- // hide_box --> */}
-                <button class="toggle_btn">
+                <button class="toggle_btn" onClick={(e)=>getEstimationDetails(e.target,row.EST_NO,row.REV_NO)}>
                   <span>상세정보조회</span>
                 </button>
               </li>
+                )
+              })
+              /* =============== 견적 목록 끝 =============== */}
             </ul>
           </div>
         </div>
@@ -644,20 +995,41 @@ const OfficerCrown = () => {
                 </div>
                 <div class="date_selects">
                   <div class="datepick_item">
-                    <input type="text" id="searchStartDate" class="datepick" />
+                    <input type="text" id="searchStartDate" class="datepick" value={str_date_from} />
                   </div>
                   <span class="dasi">-</span>
                   <div class="datepick_item">
-                    <input type="text" id="searchEndDate" class="datepick" />
+                    <input type="text" id="searchEndDate" class="datepick" value={str_date_to} />
                   </div>
                 </div>
               </div>
               <div class="cont_group">
                 <div class="modal_subtitle bold">전체조회</div>
-                <div class="all_searchs">
-                  <button class="btn btn_sm">최신순</button>
-                  <button class="btn btn_sm">과거순</button>
-                </div>
+                {
+                  (function() {
+                    if (str_order_by == 'A') {
+                      return(
+                        <div class="all_searchs">
+                          <button class="btn btn_sm" style={style_background_hilight} id="sch_order_asc" onClick={()=>setOrderBy('A')}>최신순</button>
+                          <button class="btn btn_sm" style={style_background_normal} id="sch_order_desc" onClick={()=>setOrderBy('D')}>과거순</button>
+                          <div class="btns_center">
+                            <button class="btn btn_md btn_shadow" id="btn_setting_ok" onClick={()=>okSearchSettings()}>확인</button>
+                          </div>
+                        </div>
+                      )
+                      }else{
+                        return(
+                          <div class="all_searchs">
+                            <button class="btn btn_sm" style={style_background_normal} id="sch_order_asc" onClick={()=>setOrderBy('A')}>최신순</button>
+                            <button class="btn btn_sm" style={style_background_hilight} id="sch_order_desc" onClick={()=>setOrderBy('D')}>과거순</button>
+                            <div class="btns_center">
+                              <button class="btn btn_md btn_shadow" id="btn_setting_ok" onClick={()=>okSearchSettings()}>확인</button>
+                            </div>
+                          </div>
+                        )
+                      }
+                  })()
+                }
               </div>
             </div>
           </div>
@@ -696,39 +1068,32 @@ const OfficerCrown = () => {
           <div class="modal_body">
             <div class="modal_cont">
               <ul class="revision_list">
-                <li>
-                  <div class="revision_date">21.01.03</div>
-                  <div class="revision_cont_box">
-                    <div class="revision_cont">A</div>
-                    <div class="revision_btn">
-                      <button class="btn btn_wh btn_modal_cancle">이동</button>
-                    </div>
-                  </div>
-                </li>
-                <li>
-                  <div class="revision_date">21.01.03</div>
-                  <div class="revision_cont_box">
-                    <div class="revision_cont">B</div>
-                    <div class="revision_btn">
-                      <button class="btn btn_wh btn_modal_cancle">이동</button>
-                    </div>
-                  </div>
-                </li>
-                <li>
-                  <div class="revision_date">21.01.03</div>
-                  <div class="revision_cont_box">
-                    <div class="revision_cont">C</div>
-                    <div class="revision_btn">
-                      <button class="btn btn_wh btn_modal_cancle">이동</button>
-                    </div>
-                  </div>
-                </li>
-                <li class="now_revision">
-                  <div class="revision_date">21.01.03</div>
-                  <div class="revision_cont_box">
-                    <div class="revision_cont">D</div>
-                  </div>
-                </li>
+              {
+                rev_list.map(function(row, index) {
+                  if (row.REV_NO == row.CUR_REV_NO) {
+                    return(
+                      <li class="now_revision">
+                        <div class="revision_date">{row.M_IL}</div>
+                        <div class="revision_cont_box">
+                          <div class="revision_cont">{row.REV_NO}</div>
+                        </div>
+                      </li>
+                    )
+                  }else{
+                    return(
+                      <li>
+                        <div class="revision_date">{row.M_IL}</div>
+                        <div class="revision_cont_box">
+                          <div class="revision_cont">{row.REV_NO}</div>
+                          <div class="revision_btn">
+                            <button class="btn btn_wh btn_show_rev" onClick={()=>getEstimationRevision(row.EST_NO, row.REV_NO, row.PROJECT)}>이동</button>
+                          </div>
+                        </div>
+                      </li>
+                    )
+                  }
+                })
+              }
               </ul>
             </div>
           </div>

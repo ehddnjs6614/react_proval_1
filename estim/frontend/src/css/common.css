@@ -607,7 +607,7 @@ footer {
 }
 
 .revision_date {
-  width: 75px;
+  width: 105px;
   padding: 7px 10px;
 }
 
@@ -615,11 +615,11 @@ footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: calc(100% - 75px);
+  width: calc(100% - 105px);
 }
 
 .revision_cont {
-  width: calc(100% - 72px);
+  width: calc(100% - 102px);
   text-align: center;
 }
 

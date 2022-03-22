@@ -1,1 +1,1 @@
-export const API_URL = 'http://haws-01:8090/'
+export const API_URL = 'http://proval.hoamict.net:8090/'

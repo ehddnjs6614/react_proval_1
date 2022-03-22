@@ -18,6 +18,7 @@ import Request from './Component/Request'
 import Signup from './Component/Signup'
 import Sin from './Component/Sin'
 import Slide from './Component/Slide'
+import Slide1 from './Component/Slide1'
 import Test from './Component/Test'
 import ValveController from './Component/ValveController'
 
@@ -103,6 +104,7 @@ function App() {
         <Route path="/valve/" component={ValveController} />
 
         <Route exact path="/slide" component={Slide} />
+        <Route exact path="/slide1" component={Slide1} />
 
         <Route path="/qttnstart">
           <QttnStart />

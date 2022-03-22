@@ -18,17 +18,20 @@ const Menu = props => {
 
   //로그아웃시 세션 삭제
   const onLogout = () => {
-    sessionStorage.removeItem('U_ID')
-    sessionStorage.removeItem('U_PW')
-    sessionStorage.removeItem('CUST_NAME')
-    sessionStorage.removeItem('EMAIL')
-    sessionStorage.removeItem('TEL_NO')
-    sessionStorage.removeItem('HP_NO')
-    sessionStorage.removeItem('MAN_NAME')
-    sessionStorage.removeItem('MAN_POSI')
-    sessionStorage.removeItem('REC_NAME')
-    sessionStorage.removeItem('REC_ADDR')
-    sessionStorage.removeItem('REC_CONT')
+    sessionStorage.clear()
+    // sessionStorage.removeItem('U_ID')
+    // sessionStorage.removeItem('U_PW')
+    // sessionStorage.removeItem('CUST_NAME')
+    // sessionStorage.removeItem('EMAIL')
+    // sessionStorage.removeItem('TEL_NO')
+    // sessionStorage.removeItem('HP_NO')
+    // sessionStorage.removeItem('MAN_NAME')
+    // sessionStorage.removeItem('MAN_POSI')
+    // sessionStorage.removeItem('REC_NAME')
+    // sessionStorage.removeItem('REC_ADDR')
+    // sessionStorage.removeItem('REC_CONT')
+    // sessionStorage.removeItem('PROJECT')
+
     history.push('/')
   }
   console.log(props)

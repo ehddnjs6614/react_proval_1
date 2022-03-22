@@ -52,7 +52,7 @@ input::placeholder {
 }
 
 .date_box .year {
-  font-weight: bold;
+  font-weight: normal;
   margin-right: 20px;
 }
 

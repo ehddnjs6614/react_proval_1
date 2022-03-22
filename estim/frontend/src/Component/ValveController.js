@@ -1,38 +1,26 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+
 import $ from 'jquery'
-import { Route } from 'react-router-dom'
-import Slide from './Slide'
-import { useParams } from 'react-router-dom'
 
-let IDX = 1
-const ValveController = props => {
-  let id = useParams()
-  console.log(IDX)
-  console.log(props)
-  const [valve, setValve] = useState([1])
+import { initValvestate } from '../datas/initValveState'
 
+const ValveController = ({
+  maxvalve,
+  setmaxvalve,
+  setSelectDatas,
+  setSelectvalve,
+  readonly = false,
+}) => {
   const addHandler = () => {
-    IDX++
-
-    let newArr = [...valve]
-
-    newArr.push(IDX)
-
-    setValve(newArr)
+    setmaxvalve(s => s + 1)
+    setSelectDatas(s => [...s, { ...initValvestate }])
   }
 
   const deleteHandler = () => {
-    if (valve.length === 1) {
-      IDX = 1
-    } else {
-      IDX = 1
-
-      let deleteArr = [...valve]
-
-      deleteArr.pop()
-
-      setValve(deleteArr)
+    if (maxvalve > 1) {
+      setSelectDatas(s => [...s.slice(0, s.length - 1)])
+      setmaxvalve(s => s - 1)
+      setSelectvalve(maxvalve - 2)
     }
   }
 
@@ -98,29 +86,49 @@ const ValveController = props => {
     <div>
       <div className="full_wrap_pd flex_box valve_controller">
         <div className="left_box">
-          <button className="btn btn_sm btn_wh" onClick={addHandler}>
-            벨브추가
-          </button>
+          {!readonly ? (
+            <>
+              <button className="btn btn_sm btn_wh" onClick={addHandler}>
+                벨브추가
+              </button>
 
-          <button className="btn btn_sm btn_wh" onClick={deleteHandler}>
-            삭제
-          </button>
+              <button className="btn btn_sm btn_wh" onClick={deleteHandler}>
+                삭제
+              </button>
+            </>
+          ) : (
+            <></>
+          )}
         </div>
         <div className="right_box">
           <button className="btn_dobleArrow_left btn_valve_prev"></button>
           <div className="square_box_wrap">
-            <ul className="square_box">
-              {valve.map((item, idx) => {
-                return (
-                  <>
-                    <li className="valve_default square_active" key={idx}>
-                      {item}
+            <ul className="square_box ">
+              {Array(maxvalve)
+                .fill(0)
+                .map((_, idx) => {
+                  if (idx == 0) {
+                    return (
+                      <li
+                        className="valve_default square_active"
+                        key={idx}
+                        onClick={() => setSelectvalve(idx)}
+                      >
+                        {idx + 1}
+                      </li>
+                    )
+                  }
+                  return (
+                    <li
+                      className="valve_default"
+                      key={idx}
+                      onClick={() => setSelectvalve(idx)}
+                    >
+                      {idx + 1}
                     </li>
-                  </>
-                )
-              })}
-
-              <li className="plus">+</li>
+                  )
+                })}
+              {!readonly ? <li className="plus">+</li> : <></>}
             </ul>
           </div>
           <button className="btn_dobleArrow_right btn_valve_next"></button>

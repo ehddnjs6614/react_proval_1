@@ -417,6 +417,15 @@ const EstmtCmplt = () => {
                 <div class="all_searchs">
                   <button class="btn btn_sm">최신순</button>
                   <button class="btn btn_sm">과거순</button>
+                  <div class="btns_center">
+                    <button
+                      class="btn btn_md btn_shadow"
+                      style={{ marginRight: '15px' }}
+                    >
+                      취소
+                    </button>
+                    <button class="btn btn_md btn_shadow">확인</button>
+                  </div>
                 </div>
               </div>
             </div>
