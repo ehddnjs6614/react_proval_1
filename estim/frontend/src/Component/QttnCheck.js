@@ -9,16 +9,13 @@ import Slide1 from './Slide1'
 import axios from 'axios'
 import { API_URL } from '../_api/types'
 
-const QttnCheck = () => {
-  const [number, setNumber] = useState(0)
-  const [Selectvalve, setSelectvalve] = useState(0)
+const QttnCheck = ({ selectDatas, setSelectDatas, headData, setHeadData }) => {
+  const [selectvalve, setSelectvalve] = useState(0)
 
   const location = useLocation()
-  console.log('location : ', location.state)
+  const updataData = useLocation()
+
   const data = location.state?.data
-  const headData = location.state?.headData.data
-  console.log('qttn : ', data)
-  console.log('headData : ', headData)
 
   return (
     <div>
@@ -43,8 +40,14 @@ const QttnCheck = () => {
           readonly
           setSelectvalve={setSelectvalve}
         />
-
-        <Slide1 selectData={data[Selectvalve]} headData={headData} />
+        <Slide1
+          selectData={selectDatas[selectvalve]}
+          setSelectDatas={setSelectDatas}
+          selectvalve={selectvalve}
+          selectDatas={selectDatas}
+          headData={headData}
+          setHeadData={setHeadData}
+        />
       </div>
 
       <footer className="common_footer">

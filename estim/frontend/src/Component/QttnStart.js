@@ -8,14 +8,21 @@ import ValveController from './ValveController'
 import { initValvestate } from '../datas/initValveState'
 import { useLocation } from 'react-router-dom'
 
-const QttnStart = () => {
-  const [selectDatas, setSelectDatas] = useState([{ ...initValvestate }])
-
+const QttnStart = ({
+  selectDatas,
+  setSelectDatas,
+  headData,
+  setHeadData,
+  selectList,
+  setSelectList,
+}) => {
   const [selectvalve, setSelectvalve] = useState(0)
   const [maxvalve, setmaxvalve] = useState(1)
   const PROJECT = useLocation()
   console.log('selectDatas : ', selectDatas)
   console.log('selectvalve : ', selectvalve)
+
+  const updataData = useLocation()
 
   $(function () {
     // 컨텐츠 기본높이
@@ -106,6 +113,10 @@ const QttnStart = () => {
           selectvalve={selectvalve}
           PROJECT={PROJECT}
           selectDatas={selectDatas}
+          headData={headData}
+          setHeadData={setHeadData}
+          selectList={selectList}
+          setSelectList={setSelectList}
         />
       </div>
       <footer className="common_footer">

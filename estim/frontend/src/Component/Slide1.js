@@ -7,19 +7,32 @@ import axios from 'axios'
 import { API_URL } from '../_api/types'
 import { Link, useHistory } from 'react-router-dom'
 
-const Slide = ({ selectData, setSelectDatas, selectvalve, headData }) => {
+const Slide1 = ({
+  selectData,
+  setSelectDatas,
+  selectvalve,
+  headData,
+  setHeadData,
+}) => {
   const history = useHistory()
   let PROJECT = sessionStorage.getItem('PROJECT')
   const [datas, setDatas] = useState([])
 
   const postData1 = async (EST_NO, REV_NO) => {
-    const res = await axios.get(`${API_URL}estimation/add/${EST_NO}/${REV_NO}`) //배열의 키지정.
+    const res = await axios.get(`${API_URL}estimation/add/${EST_NO}/${REV_NO}`)
     alert(res.data.message)
     console.log('res : ', res.data)
   }
-  console.log('headData : ', headData)
 
-  console.log('selectData :', selectData)
+  console.log('selectData11 :', selectData)
+
+  // const updataData = async (EST_NO, REV_NO, TAG_NO) => {
+  //   const res = await axios.post(
+  //     `${API_URL}estimation/detail/update/${EST_NO}/${REV_NO}/${TAG_NO}`
+  //   )
+  //   alert(res.data.message)
+  //   console.log('updataData :', res.data)
+  // }
 
   // useEffect(
   //   () => {
@@ -146,12 +159,11 @@ const Slide = ({ selectData, setSelectDatas, selectvalve, headData }) => {
             modules={[Navigation, Pagination, Scrollbar, A11y]}
             spaceBetween={50}
             slidesPerView={1}
+            simulateTouch={false} //마우스 터치 X
             navigation={{
               nextEl: '.swiper-button-next',
               prevEl: '.swiper-button-prev',
             }}
-            autoHeight
-            scrollbar={{ draggable: true }}
             onSwiper={swiper => console.log(swiper)}
             onSlideChange={() => console.log('slide change')}
           >
@@ -320,9 +332,12 @@ const Slide = ({ selectData, setSelectDatas, selectvalve, headData }) => {
             <div className="text_center">입력하신 사양이 맞습니까?</div>
             <div className="btn_box">
               <div className="btns_center">
-                <Link to="/qttnStart" className="btn btn_skyblue btn_50">
+                <button
+                  className="btn btn_skyblue btn_50"
+                  onClick={() => history.goBack()}
+                >
                   수정
-                </Link>
+                </button>
                 <Link
                   to="/request"
                   className="btn btn_skyblue btn_50"
@@ -351,4 +366,4 @@ const Slide = ({ selectData, setSelectDatas, selectvalve, headData }) => {
   )
 }
 
-export default Slide
+export default Slide1

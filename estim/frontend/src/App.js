@@ -21,8 +21,12 @@ import Slide from './Component/Slide'
 import Slide1 from './Component/Slide1'
 import Test from './Component/Test'
 import ValveController from './Component/ValveController'
-
+import { initValvestate } from './datas/initValveState'
 function App() {
+  const [selectDatas, setSelectDatas] = useState([{ ...initValvestate }])
+  const [headData, setHeadData] = useState(null)
+  const [selectList, setSelectList] = useState([])
+
   const [isLogin, setIsLogin] = useState(false)
 
   // axios get요청
@@ -59,10 +63,6 @@ function App() {
           <AccountMngmn />
         </Route>
 
-        <Route exact path="/qttncheck">
-          <QttnCheck />
-        </Route>
-
         <Route exact path="/request">
           <Request />
         </Route>
@@ -94,7 +94,14 @@ function App() {
         </Route>
 
         <Route exact path="/formselect">
-          <FormSelect />
+          <FormSelect
+            selectDatas={selectDatas}
+            setSelectDatas={setSelectDatas}
+            headData={headData}
+            setHeadData={setHeadData}
+            selectList={selectList}
+            setSelectList={setSelectList}
+          />
         </Route>
 
         <Route exact path="/signup">
@@ -106,8 +113,24 @@ function App() {
         <Route exact path="/slide" component={Slide} />
         <Route exact path="/slide1" component={Slide1} />
 
+        <Route exact path="/qttncheck">
+          <QttnCheck
+            selectDatas={selectDatas}
+            setSelectDatas={setSelectDatas}
+            headData={headData}
+            setHeadData={setHeadData}
+          />
+        </Route>
+
         <Route path="/qttnstart">
-          <QttnStart />
+          <QttnStart
+            selectDatas={selectDatas}
+            setSelectDatas={setSelectDatas}
+            headData={headData}
+            setHeadData={setHeadData}
+            selectList={selectList}
+            setSelectList={setSelectList}
+          />
         </Route>
 
         <Route exact path="/test">

@@ -99,51 +99,51 @@ const Index1 = () => {
 
   return (
     <div className="login_page">
-      <div class="wrap big_padding ">
-        <div class="logo">
+      <div className="wrap big_padding ">
+        <div className="logo">
           <img src={logo} alt="프로발 로고" />
         </div>
-        <form action="post" class="form_logo">
-          <div class="input_group label_color">
-            <label for="">아이디</label>
+        <form action="post" className="form_logo">
+          <div className="input_group label_color">
+            <label htmlFor="">아이디</label>
             <input type="text" value={id} onChange={handleId} />
           </div>
-          <div class="input_group label_color">
-            <label for="">비밀번호</label>
+          <div className="input_group label_color">
+            <label htmlFor="">비밀번호</label>
             <input type="password" value={password} onChange={handlePassword} />
           </div>
 
-          <div class="signin_etc_box input_group">
-            <div class="check_item">
+          <div className="signin_etc_box input_group">
+            <div className="check_item">
               <input id="autoSignin" type="checkbox" />
-              <label for="autoSignin">자동로그인</label>
+              <label htmlFor="autoSignin">자동로그인</label>
             </div>
-            <Link to="/forget" class="btn_forget">
+            <Link to="/forget" className="btn_forget">
               아이디 ・ 비밀번호 찾기
             </Link>
           </div>
 
-          <button type="button" class="btn btn_99" onClick={onClickLogin}>
+          <button type="button" className="btn btn_99" onClick={onClickLogin}>
             로그인
           </button>
 
-          {/* <Link to="/main" id="signIn" class="btn btn_99">
+          {/* <Link to="/main" id="signIn" className="btn btn_99">
             로그인
           </Link> */}
         </form>
 
-        <div class="signin_footer">
-          <Link to="signup" class="btn btn_sky btn_99">
+        <div className="signin_footer">
+          <Link to="signup" className="btn btn_sky btn_99">
             회원가입
           </Link>
 
-          {/* <!-- <div class="signin_etc">
+          {/* <!-- <div className="signin_etc">
                 <a href="forget.html">비밀번호 분실</a>
                 <a href="help.html">도움페이지</a>
             </div> --> */}
         </div>
       </div>
-      <footer class="simple_footer">
+      <footer className="simple_footer">
         Professional
         <br />
         Control Valves

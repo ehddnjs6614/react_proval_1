@@ -389,6 +389,9 @@ li.tag_active .btn_tag {
 .swiper-button-next,
 .swiper-button-prev {
   height: 105px !important;
+
+  /* height: 30px !important;
+  margin-top: 10px !important; */
 }
 
 .swiper-button-next:after,

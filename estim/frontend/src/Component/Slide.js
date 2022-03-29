@@ -8,11 +8,17 @@ import { API_URL } from '../_api/types'
 import { Link } from 'react-router-dom'
 import { useHistory } from 'react-router-dom'
 
-const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
+const Slide = ({
+  selectData,
+  selectDatas,
+  setSelectDatas,
+  selectvalve,
+  setHeadData,
+  headData,
+}) => {
   let PROJECT = sessionStorage.getItem('PROJECT')
   const history = useHistory()
   const headDataRef = useRef()
-  const [headData, setHeadData] = useState([])
 
   //bodyMaterial start
   const [Material, setMaterial] = useState([])
@@ -31,9 +37,26 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
 
   //datapost api요청
   const postData = async data => {
-    const res = await axios.post(`${API_URL}estimation/add`, { Tag: [data] }) //배열의 키지정.
+    let res = null
+    if (!headData) {
+      res = await axios.post(`${API_URL}estimation/add`, { Tag: [data] }) //배열의 키지정.
+      setHeadData(res.data.data)
+
+      console.log('res.data : ', res.data)
+      console.log('feee : ', res.data.data)
+    } else {
+      console.log('headData :', headData)
+      res = await axios.post(
+        `${API_URL}estimation/detail/update/${headData.EST_NO}/${headData.REV_NO}/${selectData.TAG_NO}`,
+        data
+      )
+
+      console.log('updata : ', res.data)
+    }
+    alert(res.data.message)
+
     // headDataRef.current = res.data
-    // console.log('res :', res.data)
+
     history.push('/qttncheck', {
       data: selectDatas,
       headData: res.data,
@@ -207,18 +230,44 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
       ]
     })
   }
+  const changeValveType = name => async () => {
+    const TAG_NO = await getTag1()
+
+    setSelectDatas(s => {
+      const currentData = s[selectvalve]
+      return [
+        ...s.slice(0, selectvalve),
+        { ...currentData, ValveType: name, TAG_NO, BODY_TYPE: null },
+        ...s.slice(selectvalve + 1),
+      ]
+    })
+  }
+  const changeValve1Type = name => async () => {
+    const TAG_NO = await getTag()
+
+    setSelectDatas(s => {
+      const currentData = s[selectvalve]
+      if (TAG_NO === null) {
+        return [
+          ...s.slice(0, selectvalve),
+          { ...currentData, BODY_TYPE: name },
+          ...s.slice(selectvalve + 1),
+        ]
+      }
+      return [
+        ...s.slice(0, selectvalve),
+        { ...currentData, BODY_TYPE: name, TAG_NO, ValveType: null },
+        ...s.slice(selectvalve + 1),
+      ]
+    })
+  }
 
   const changevalvebyname = name => async () => {
     let TAG_NO = null
-
     //name과 toway가 같을때 gettag 실행.
-    if (name === 'twoway') {
+    if (name === 'BODY_TYPE') {
       TAG_NO = await getTag()
     }
-    if (name === 'twoway1') {
-      TAG_NO = await getTag1()
-    }
-
     setSelectDatas(s => {
       const currentData = s[selectvalve]
       if (TAG_NO === null) {
@@ -230,7 +279,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
       }
       return [
         ...s.slice(0, selectvalve),
-        { ...currentData, [name]: !currentData[name], TAG_NO },
+        { ...currentData, [name]: !currentData[name], TAG_NO, ValveType: null },
         ...s.slice(selectvalve + 1),
       ]
     })
@@ -245,6 +294,17 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
       ]
     })
   }
+  const setValueInput = (key, value) => {
+    setSelectDatas(s => {
+      const currentData = s[selectvalve]
+      return [
+        ...s.slice(0, selectvalve),
+        { ...currentData, [key]: value },
+        ...s.slice(selectvalve + 1),
+      ]
+    })
+  }
+
   // const changeAccessory = name => () => {
   //   setSelectDatas(s => {
   //     const currentData = s[selectvalve]
@@ -286,16 +346,6 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
     })
   }
 
-  const changeValveType = name => () => {
-    setSelectDatas(s => {
-      const currentData = s[selectvalve]
-      return [
-        ...s.slice(0, selectvalve),
-        { ...currentData, ValveType: name },
-        ...s.slice(selectvalve + 1),
-      ]
-    })
-  }
   const changeAirSupply = name => () => {
     setSelectDatas(s => {
       const currentData = s[selectvalve]
@@ -331,7 +381,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
       const currentData = s[selectvalve]
       return [
         ...s.slice(0, selectvalve),
-        { ...currentData, Handle: name },
+        { ...currentData, HAND_WHEEL: name },
         ...s.slice(selectvalve + 1),
       ]
     })
@@ -527,15 +577,14 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
         </Swiper>
         {/* 여기서 부터 시작 */}
         <Swiper
-          modules={[Navigation, Pagination, Scrollbar, A11y]}
+          modules={[Navigation, Pagination, A11y]}
           spaceBetween={50}
           slidesPerView={1}
+          simulateTouch={false} //마우스 터치 X
           navigation={{
             nextEl: '.swiper-button-next',
             prevEl: '.swiper-button-prev',
           }}
-          autoHeight
-          scrollbar={{ draggable: true }}
           onSwiper={swiper => console.log(swiper)}
           onSlideChange={() => console.log('slide change')}
         >
@@ -562,7 +611,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                       name="conrolValve"
                       value="conrolValve"
                       checked={selectData.VALVE === 'Control Valve'}
-                      onClick={changecontrolvalve('Control Valve')}
+                      onChange={changecontrolvalve('Control Valve')}
                     />
                     <label htmlFor="conrolValve">Control Valve</label>
                   </div>
@@ -573,7 +622,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                       name="conrolValve1"
                       value="conrolValve1"
                       checked={selectData.VALVE === 'On-Off Valve'}
-                      onClick={changecontrolvalve('On-Off Valve')}
+                      onChange={changecontrolvalve('On-Off Valve')}
                     />
                     <label htmlFor="conoffValve1">On-Off Valve</label>
                   </div>
@@ -588,11 +637,11 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                             type="radio"
                             id="onoffValve1"
                             checked={
-                              selectData.twoway === null
+                              selectData.BODY_TYPE === null
                                 ? false
-                                : selectData.twoway
+                                : selectData.BODY_TYPE === '2 way'
                             }
-                            onClick={changevalvebyname('twoway', true)}
+                            onChange={changeValve1Type('2 way')}
                           />
                           <label htmlFor="onoffValve1">2 way</label>
                         </div>
@@ -603,11 +652,11 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                             id="onoffValve2"
                             value="onoffValve2"
                             checked={
-                              selectData.twoway === null
+                              selectData.BODY_TYPE === null
                                 ? false
-                                : !selectData.twoway
+                                : selectData.BODY_TYPE === '3 way'
                             }
-                            onClick={changevalvebyname('twoway', true)}
+                            onChange={changeValve1Type('3 way')}
                           />
                           <label htmlFor="onoffValve2">3 way</label>
                         </div>
@@ -625,7 +674,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                               ? false
                               : selectData.ValveType === 'Angle'
                           }
-                          onClick={changeValveType('Angle')}
+                          onChange={changeValveType('Angle')}
                         />
                         <label htmlFor="conrolValve2">Angle</label>
                       </div>
@@ -640,7 +689,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                               ? false
                               : selectData.ValveType === 'Segmental Ball'
                           }
-                          onClick={changeValveType('Segmental Ball')}
+                          onChange={changeValveType('Segmental Ball')}
                         />
                         <label htmlFor="conrolValve3">Segmental Ball</label>
                       </div>
@@ -656,7 +705,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                               : selectData.ValveType ===
                                 'Hi-Performance Butterfly'
                           }
-                          onClick={changeValveType('Hi-Performance Butterfly')}
+                          onChange={changeValveType('Hi-Performance Butterfly')}
                         />
                         <label htmlFor="conrolValve4">
                           Hi-Performance Butterfly
@@ -673,7 +722,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                               ? false
                               : selectData.ValveType === 'Std. Butterfly'
                           }
-                          onClick={changeValveType('Std. Butterfly')}
+                          onChange={changeValveType('Std. Butterfly')}
                         />
                         <label htmlFor="conrolValve5">Std. Butterfly</label>
                         {/* 끝 */}
@@ -688,11 +737,11 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                             name="conrolValve6"
                             value="conrolValve6"
                             checked={
-                              selectData.twoway1 === null
+                              selectData.ValveType === null
                                 ? false
-                                : selectData.twoway1
+                                : selectData.ValveType === '2 way'
                             }
-                            onClick={changevalvebyname('twoway1', false)}
+                            onChange={changeValveType('2 way')}
                           />
                           <label htmlFor="conrolValve6">2 way</label>
                         </div>
@@ -703,11 +752,11 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                             name="conrolValve7"
                             value="conrolValve7"
                             checked={
-                              selectData.twoway1 === null
+                              selectData.ValveType === null
                                 ? false
-                                : !selectData.twoway1
+                                : selectData.ValveType === '3 way'
                             }
-                            onClick={changevalvebyname('twoway1', false)}
+                            onChange={changeValveType('3 way')}
                           />
                           <label htmlFor="conrolValve7">3 way</label>
                         </div>
@@ -794,7 +843,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                               ? false
                               : selectData.END_CONNECTION === 'Flange'
                           }
-                          onClick={changeEndConnection('Flange')}
+                          onChange={changeEndConnection('Flange')}
                         />
                         <label htmlFor="conrolValve8">Flange</label>
                       </div>
@@ -809,7 +858,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                               ? false
                               : selectData.END_CONNECTION === 'Screw'
                           }
-                          onClick={changeEndConnection('Screw')}
+                          onChange={changeEndConnection('Screw')}
                         />
                         <label htmlFor="conrolValve9">Screw</label>
                       </div>
@@ -824,7 +873,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                               ? false
                               : selectData.END_CONNECTION === 'Socket welding'
                           }
-                          onClick={changeEndConnection('Socket welding')}
+                          onChange={changeEndConnection('Socket welding')}
                         />
                         <label htmlFor="conrolValve10">Socket welding</label>
                       </div>
@@ -839,7 +888,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                               ? false
                               : selectData.END_CONNECTION === 'Butt welding'
                           }
-                          onClick={changeEndConnection('Butt welding')}
+                          onChange={changeEndConnection('Butt welding')}
                         />
                         <label htmlFor="conrolValve11">Butt welding</label>
                       </div>
@@ -860,7 +909,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                             ? false
                             : selectData.ACTUATOR_TYPE === 'Pneumatic'
                         }
-                        onClick={changePneumatic('Pneumatic')}
+                        onChange={changePneumatic('Pneumatic')}
                       />
                       <label htmlFor="conrolValve12">Pneumatic</label>
                     </div>
@@ -875,7 +924,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                             ? false
                             : selectData.ACTUATOR_TYPE === 'Electric'
                         }
-                        onClick={changePneumatic('Electric')}
+                        onChange={changePneumatic('Electric')}
                       />
                       <label htmlFor="conrolValve13">Electric</label>
                     </div>
@@ -890,7 +939,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                             ? false
                             : selectData.ACTUATOR_TYPE === 'Hydraulic'
                         }
-                        onClick={changePneumatic('Hydraulic')}
+                        onChange={changePneumatic('Hydraulic')}
                       />
                       <label htmlFor="conrolValve14">Hydraulic</label>
                     </div>
@@ -906,11 +955,11 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                         name="conrolValve15"
                         value="conrolValve15"
                         checked={
-                          selectData.Handle === null
+                          selectData.HAND_WHEEL === null
                             ? false
-                            : selectData.Handle === 'Yes'
+                            : selectData.HAND_WHEEL === 'Yes'
                         }
-                        onClick={changeHandle('Yes')}
+                        onChange={changeHandle('Yes')}
                       />
                       <label htmlFor="conrolValve15">Yes</label>
                     </div>
@@ -921,11 +970,11 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                         name="conrolValve16"
                         value="conrolValve16"
                         checked={
-                          selectData.Handle === null
+                          selectData.HAND_WHEEL === null
                             ? false
-                            : selectData.Handle === 'No'
+                            : selectData.HAND_WHEEL === 'No'
                         }
-                        onClick={changeHandle('No')}
+                        onChange={changeHandle('No')}
                       />
                       <label htmlFor="conrolValve16">No</label>
                     </div>
@@ -948,7 +997,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve17"
                           value="conrolValve17"
                           checked={selectData.MEDIUM_1 === 'Liquid'}
-                          onClick={changeFluid('Liquid')}
+                          onChange={changeFluid('Liquid')}
                         />
                         <label htmlFor="conrolValve17">Liquid</label>
                       </div>
@@ -959,7 +1008,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve18"
                           value="conrolValve18"
                           checked={selectData.MEDIUM_1 === 'Stram'}
-                          onClick={changeFluid('Stram')}
+                          onChange={changeFluid('Stram')}
                         />
                         <label htmlFor="conrolValve18">Stram</label>
                       </div>
@@ -970,7 +1019,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve19"
                           value="conrolValve19"
                           checked={selectData.MEDIUM_1 === 'Gas'}
-                          onClick={changeFluid('Gas')}
+                          onChange={changeFluid('Gas')}
                         />
                         <label htmlFor="conrolValve19">Gas</label>
                       </div>
@@ -988,13 +1037,34 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           <tr>
                             <th>Q</th>
                             <td>
-                              <input type="text" className="input_bk" />
+                              <input
+                                type="text"
+                                className="input_bk"
+                                value={selectData.FR_MAX}
+                                onChange={e =>
+                                  setValueInput('FR_MAX', e.target.value)
+                                }
+                              />
                             </td>
                             <td>
-                              <input type="text" className="input_bk" />
+                              <input
+                                type="text"
+                                className="input_bk"
+                                value={selectData.FR_NOR}
+                                onChange={e =>
+                                  setValueInput('FR_NOR', e.target.value)
+                                }
+                              />
                             </td>
                             <td>
-                              <input type="text" className="input_bk" />
+                              <input
+                                type="text"
+                                className="input_bk"
+                                value={selectData.FR_MIN}
+                                onChange={e =>
+                                  setValueInput('FR_MIN', e.target.value)
+                                }
+                              />
                             </td>
                             <td>
                               <select
@@ -1013,13 +1083,34 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           <tr>
                             <th>P1</th>
                             <td>
-                              <input type="text" className="input_bk" />
+                              <input
+                                type="text"
+                                className="input_bk"
+                                value={selectData.IP_MAX}
+                                onChange={e =>
+                                  setValueInput('IP_MAX', e.target.value)
+                                }
+                              />
                             </td>
                             <td>
-                              <input type="text" className="input_bk" />
+                              <input
+                                type="text"
+                                className="input_bk"
+                                value={selectData.IP_NOR}
+                                onChange={e =>
+                                  setValueInput('IP_NOR', e.target.value)
+                                }
+                              />
                             </td>
                             <td>
-                              <input type="text" className="input_bk" />
+                              <input
+                                type="text"
+                                className="input_bk"
+                                value={selectData.IP_MIN}
+                                onChange={e =>
+                                  setValueInput('IP_MIN', e.target.value)
+                                }
+                              />
                             </td>
                             <td>
                               <select
@@ -1038,13 +1129,34 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           <tr>
                             <th>P2</th>
                             <td>
-                              <input type="text" className="input_bk" />
+                              <input
+                                type="text"
+                                className="input_bk"
+                                value={selectData.OP_MAX}
+                                onChange={e =>
+                                  setValueInput('OP_MAX', e.target.value)
+                                }
+                              />
                             </td>
                             <td>
-                              <input type="text" className="input_bk" />
+                              <input
+                                type="text"
+                                className="input_bk"
+                                value={selectData.OP_NOR}
+                                onChange={e =>
+                                  setValueInput('OP_NOR', e.target.value)
+                                }
+                              />
                             </td>
                             <td>
-                              <input type="text" className="input_bk" />
+                              <input
+                                type="text"
+                                className="input_bk"
+                                value={selectData.OP_MIN}
+                                onChange={e =>
+                                  setValueInput('OP_MIN', e.target.value)
+                                }
+                              />
                             </td>
                             <td>
                               <select
@@ -1063,13 +1175,34 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           <tr>
                             <th>T1</th>
                             <td>
-                              <input type="text" className="input_bk" />
+                              <input
+                                type="text"
+                                className="input_bk"
+                                value={selectData.IT_MAX}
+                                onChange={e =>
+                                  setValueInput('IT_MAX', e.target.value)
+                                }
+                              />
                             </td>
                             <td>
-                              <input type="text" className="input_bk" />
+                              <input
+                                type="text"
+                                className="input_bk"
+                                value={selectData.IT_NOR}
+                                onChange={e =>
+                                  setValueInput('IT_NOR', e.target.value)
+                                }
+                              />
                             </td>
                             <td>
-                              <input type="text" className="input_bk" />
+                              <input
+                                type="text"
+                                className="input_bk"
+                                value={selectData.IT_MIN}
+                                onChange={e =>
+                                  setValueInput('IT_MIN', e.target.value)
+                                }
+                              />
                             </td>
                             <td>
                               <select
@@ -1086,9 +1219,16 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                             </td>
                           </tr>
                           <tr>
-                            <th colspan="2">Density</th>
-                            <td colspan="2">
-                              <input type="text" className="input_bk" />
+                            <th colSpan="2">Density</th>
+                            <td colSpan="2">
+                              <input
+                                type="text"
+                                className="input_bk"
+                                value={selectData.D_NOR}
+                                onChange={e =>
+                                  setValueInput('D_NOR', e.target.value)
+                                }
+                              />
                             </td>
                             <td>
                               <select
@@ -1105,9 +1245,16 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                             </td>
                           </tr>
                           <tr>
-                            <th colspan="2">Molecular</th>
-                            <td colspan="2">
-                              <input type="text" className="input_bk" />
+                            <th colSpan="2">Molecular</th>
+                            <td colSpan="2">
+                              <input
+                                type="text"
+                                className="input_bk"
+                                value={selectData.MW_NOR}
+                                onChange={e =>
+                                  setValueInput('MW_NOR', e.target.value)
+                                }
+                              />
                             </td>
                             <td>
                               <select
@@ -1143,7 +1290,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           type="checkbox"
                           id="conrolValve100"
                           checked={selectData['IP_POSITIONER']}
-                          onClick={changevalvebyname('IP_POSITIONER')}
+                          onChange={changevalvebyname('IP_POSITIONER')}
                         />
                         <label htmlFor="conrolValve100">Positioner</label>
                       </div>
@@ -1157,7 +1304,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve20"
                           value="conrolValve20"
                           checked={selectData.SOLENOID_CONNECT_TYPE === 'P.P'}
-                          onClick={changeType('P.P')}
+                          onChange={changeType('P.P')}
                           disabled={selectData.IP_POSITIONER === false}
                         />
                         <label htmlFor="conrolValve20">P.P</label>
@@ -1170,7 +1317,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve21"
                           value="conrolValve21"
                           checked={selectData.SOLENOID_CONNECT_TYPE === 'E.P'}
-                          onClick={changeType('E.P')}
+                          onChange={changeType('E.P')}
                           disabled={selectData.IP_POSITIONER === false}
                         />
                         <label htmlFor="conrolValve21">E.P</label>
@@ -1182,7 +1329,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve22"
                           value="conrolValve22"
                           checked={selectData.SOLENOID_CONNECT_TYPE === 'Smart'}
-                          onClick={changeType('Smart')}
+                          onChange={changeType('Smart')}
                           disabled={selectData.IP_POSITIONER === false}
                         />
                         <label htmlFor="conrolValve22">Smart</label>
@@ -1199,7 +1346,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve23"
                           value="conrolValve23"
                           checked={selectData.IP_ENCLOSURE === 'Yes'}
-                          onClick={changeIP_ENCLOSURE('Yes')}
+                          onChange={changeIP_ENCLOSURE('Yes')}
                           disabled={selectData.IP_POSITIONER === false}
                         />
                         <label htmlFor="conrolValve23">Yes</label>
@@ -1211,7 +1358,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve24"
                           value="conrolValve24"
                           checked={selectData.IP_ENCLOSURE === 'No'}
-                          onClick={changeIP_ENCLOSURE('No')}
+                          onChange={changeIP_ENCLOSURE('No')}
                           disabled={selectData.IP_POSITIONER === false}
                         />
                         <label htmlFor="conrolValve24">No</label>
@@ -1226,7 +1373,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve25"
                           value="conrolValve25"
                           checked={selectData.proof === '내압'}
-                          onClick={changeProof('내압')}
+                          onChange={changeProof('내압')}
                           disabled={selectData.IP_POSITIONER === false}
                         />
                         <label htmlFor="conrolValve25">내압</label>
@@ -1238,7 +1385,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve26"
                           value="conrolValve26"
                           checked={selectData.proof === '본질안전'}
-                          onClick={changeProof('본질안전')}
+                          onChange={changeProof('본질안전')}
                           disabled={selectData.IP_POSITIONER === false}
                         />
                         <label htmlFor="conrolValve26">본질안전</label>
@@ -1250,7 +1397,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve27"
                           value="conrolValve27"
                           checked={selectData.proof === '수소방폭'}
-                          onClick={changeProof('수소방폭')}
+                          onChange={changeProof('수소방폭')}
                           disabled={selectData.IP_POSITIONER === false}
                         />
                         <label htmlFor="conrolValve27">수소방폭</label>
@@ -1267,7 +1414,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve28"
                           value="conrolValve28"
                           checked={selectData.IP_TYPE === '+HART'}
-                          onClick={changeIP_TYPE('+HART')}
+                          onChange={changeIP_TYPE('+HART')}
                           disabled={selectData.IP_POSITIONER === false}
                         />
                         <label htmlFor="conrolValve28">+HART</label>
@@ -1279,7 +1426,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve29"
                           value="conrolValve29"
                           checked={selectData.IP_TYPE === '+Field-bus'}
-                          onClick={changeIP_TYPE('+Field-bus')}
+                          onChange={changeIP_TYPE('+Field-bus')}
                           disabled={selectData.IP_POSITIONER === false}
                         />
                         <label htmlFor="conrolValve29">+Field-bus</label>
@@ -1296,7 +1443,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve30"
                           value="conrolValve30"
                           checked={selectData.PT_TRANSMIT === 'Yes'}
-                          onClick={changePT_TRANSMIT('Yes')}
+                          onChange={changePT_TRANSMIT('Yes')}
                           disabled={selectData.IP_POSITIONER === false}
                         />
                         <label htmlFor="conrolValve30">Yes</label>
@@ -1308,7 +1455,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve31"
                           value="conrolValve31"
                           checked={selectData.PT_TRANSMIT === 'No'}
-                          onClick={changePT_TRANSMIT('No')}
+                          onChange={changePT_TRANSMIT('No')}
                           disabled={selectData.IP_POSITIONER === false}
                         />
                         <label htmlFor="conrolValve31">No</label>
@@ -1325,7 +1472,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve32"
                           value="conrolValve32"
                           checked={selectData.SOLENOID_MATERIAL === 'General'}
-                          onClick={changeSOLENOID_MATERIAL('General')}
+                          onChange={changeSOLENOID_MATERIAL('General')}
                           disabled={selectData.IP_POSITIONER === false}
                         />
                         <label htmlFor="conrolValve32">General</label>
@@ -1337,7 +1484,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve33"
                           value="conrolValve33"
                           checked={selectData.SOLENOID_MATERIAL === 'SUS'}
-                          onClick={changeSOLENOID_MATERIAL('SUS')}
+                          onChange={changeSOLENOID_MATERIAL('SUS')}
                           disabled={selectData.IP_POSITIONER === false}
                         />
                         <label htmlFor="conrolValve33">SUS</label>
@@ -1349,7 +1496,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           type="checkbox"
                           id="conrolValve34"
                           checked={selectData.SOLENOID_MFG === 'Solenoid Valve'}
-                          onClick={changeSOLENOID_MFG('Solenoid Valve')}
+                          onChange={changeSOLENOID_MFG('Solenoid Valve')}
                           disabled={selectData.IP_POSITIONER === false}
                         />
                         <label htmlFor="conrolValve34">Solenoid Valve</label>
@@ -1361,7 +1508,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           type="checkbox"
                           id="conrolValve35"
                           checked={selectData.LIMIT_MFG === 'Linit Switch'}
-                          onClick={changeLIMIT_MFG('Linit Switch')}
+                          onChange={changeLIMIT_MFG('Linit Switch')}
                           disabled={selectData.IP_POSITIONER === false}
                         />
                         <label htmlFor="conrolValve35">Linit Switch</label>
@@ -1381,7 +1528,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve36"
                           value="conrolValve36"
                           checked={selectData.AIR_SET_CONNECT_TYPE === 'PT'}
-                          onClick={changeAirSupply('PT')}
+                          onChange={changeAirSupply('PT')}
                         />
                         <label htmlFor="conrolValve36">PT</label>
                       </div>
@@ -1392,7 +1539,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve37"
                           value="conrolValve37"
                           checked={selectData.AIR_SET_CONNECT_TYPE === 'PT.F'}
-                          onClick={changeAirSupply('PT.F')}
+                          onChange={changeAirSupply('PT.F')}
                         />
                         <label htmlFor="conrolValve37">PT.F</label>
                       </div>
@@ -1403,7 +1550,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve38"
                           value="conrolValve38"
                           checked={selectData.AIR_SET_CONNECT_TYPE === 'NPT'}
-                          onClick={changeAirSupply('NPT')}
+                          onChange={changeAirSupply('NPT')}
                         />
                         <label htmlFor="conrolValve38">NPT</label>
                       </div>
@@ -1414,7 +1561,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve39"
                           value="conrolValve39"
                           checked={selectData.AIR_SET_CONNECT_TYPE === 'NPT.F'}
-                          onClick={changeAirSupply('NPT.F')}
+                          onChange={changeAirSupply('NPT.F')}
                         />
                         <label htmlFor="conrolValve39">NPT.F</label>
                       </div>
@@ -1425,7 +1572,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve40"
                           value="conrolValve40"
                           checked={selectData.AirSupply1}
-                          onClick={changevalvebyname('AirSupply1')}
+                          onChange={changevalvebyname('AirSupply1')}
                         />
                         <label htmlFor="conrolValve40">1/2</label>
                       </div>
@@ -1436,7 +1583,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve41"
                           value="conrolValve41"
                           checked={!selectData.AirSupply1}
-                          onClick={changevalvebyname('AirSupply1')}
+                          onChange={changevalvebyname('AirSupply1')}
                         />
                         <label htmlFor="conrolValve41">1/4</label>
                       </div>
@@ -1453,7 +1600,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve42"
                           value="conrolValve42"
                           checked={selectData.IP_CONDUIT_AIR_CONNECT === 'PT'}
-                          onClick={changeElectrical('PT')}
+                          onChange={changeElectrical('PT')}
                         />
                         <label htmlFor="conrolValve42">PT</label>
                       </div>
@@ -1464,7 +1611,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve43"
                           value="conrolValve43"
                           checked={selectData.IP_CONDUIT_AIR_CONNECT === 'PT.F'}
-                          onClick={changeElectrical('PT.F')}
+                          onChange={changeElectrical('PT.F')}
                         />
                         <label htmlFor="conrolValve43">PT.F</label>
                       </div>
@@ -1475,7 +1622,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve44"
                           value="conrolValve44"
                           checked={selectData.IP_CONDUIT_AIR_CONNECT === 'NPT'}
-                          onClick={changeElectrical('NPT')}
+                          onChange={changeElectrical('NPT')}
                         />
                         <label htmlFor="conrolValve44">NPT</label>
                       </div>
@@ -1488,7 +1635,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           checked={
                             selectData.IP_CONDUIT_AIR_CONNECT === 'NPT.F'
                           }
-                          onClick={changeElectrical('NPT.F')}
+                          onChange={changeElectrical('NPT.F')}
                         />
                         <label htmlFor="conrolValve45">NPT.F</label>
                       </div>
@@ -1499,7 +1646,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve46"
                           value="conrolValve46"
                           checked={selectData.Electrical1}
-                          onClick={changevalvebyname('Electrical1')}
+                          onChange={changevalvebyname('Electrical1')}
                         />
                         <label htmlFor="conrolValve46">1/2</label>
                       </div>
@@ -1510,7 +1657,7 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                           name="conrolValve47"
                           value="conrolValve47"
                           checked={!selectData.Electrical1}
-                          onClick={changevalvebyname('Electrical1')}
+                          onChange={changevalvebyname('Electrical1')}
                         />
                         <label htmlFor="conrolValve47">1/4</label>
                       </div>
@@ -1529,15 +1676,16 @@ const Slide = ({ selectData, selectDatas, setSelectDatas, selectvalve }) => {
                       cols="30"
                       rows="10"
                       className="input_bk"
+                      value={selectData.OTHER_REQUEST}
+                      onChange={e =>
+                        setValueInput('OTHER_REQUEST', e.target.value)
+                      }
                     ></textarea>
                   </div>
                 </div>
 
                 <button
-                  to={{
-                    pathname: '/qttncheck',
-                    state: { data: selectDatas, headData: headDataRef.current },
-                  }}
+                  to="/qttncheck"
                   className="btn btn_100"
                   onClick={() => {
                     postData(selectData, headData)
