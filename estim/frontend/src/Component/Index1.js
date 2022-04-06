@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import logo from '../images/logo.png'
 import '../css/reset.css'
 import '../css/common.css'
@@ -6,12 +6,10 @@ import '../css/common.css'
 import '../css/form.css'
 import '../css/main.css'
 import '../css/menu.css'
-import $ from 'jquery'
 import 'jquery-ui-dist/jquery-ui'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import { API_URL } from '../_api/types'
-import { ThemeContext } from '../context/ThemeContext'
 
 const Index1 = () => {
   const [id, setId] = useState('')
@@ -35,8 +33,8 @@ const Index1 = () => {
 
   const onClickLogin = () => {
     console.log('click login')
-    console.log('ID : ', id)
-    console.log('PW : ', password)
+    // console.log('ID : ', id)
+    // console.log('PW : ', password)
     axios
       .post(`${API_URL}account/login`, {
         U_ID: id,
@@ -55,16 +53,7 @@ const Index1 = () => {
         console.log(res)
         console.log('res.data.U_ID :: ', res.data.data.U_ID)
         console.log('res.data.U_PW :: ', res.data.data.U_PW)
-        if (res.data.data.U_ID === undefined) {
-          setId('') // 실패시 입력한 아이디값 초기화
-          setPassword('') // 실패시 입력한 비밀번호값 초기화
-          console.log('==========', res.data.message)
-          alert(res.data.message)
-        } else if (res.data.data.U_PW === null) {
-          console.log('=========', '입력하신 비밀번호가 일치하지 않습니다.')
-          alert('입력하신 비밀번호가 일치하지 않습니다.')
-        } else if (res.data.data.U_ID === id) {
-          console.log('===========', '로그인 성공')
+        if (res.data.data.U_ID === id) {
           console.log('==========', res.data.message)
           alert(res.data.message)
           sessionStorage.setItem('U_ID', id)
@@ -82,8 +71,11 @@ const Index1 = () => {
           document.location.href = '/main'
         }
       })
-
-      .catch()
+      .catch(err => {
+        alert('사용자 계정을 확인해주세요.')
+        setId('')
+        setPassword('')
+      })
   }
 
   useEffect(

@@ -13,29 +13,15 @@ import {
 } from '../Utils/EstimUtils'
 import axios from 'axios'
 
-const FormSelect = ({
-  selectData,
-  selectDatas,
-  setSelectDatas,
-  selectvalve,
-  setHeadData,
-  headData,
-  selectList,
-  setSelectList,
-}) => {
-  let date_to = new Date()
-  let date_from = new Date()
-  let str_date_from = getSubStr(date_from.toISOString(), 0, 10)
-  let arr_from = str_date_from.split('-')
-  let str_from_y = arr_from[0]
-  let str_from_m = arr_from[1]
-  let str_from_d = arr_from[2]
+const FormSelect = ({ setSelectDatas, selectList, setSelectList }) => {
+  const [reload, setReload] = useState(false)
 
-  let str_date_to = getSubStr(date_to.toISOString(), 0, 10)
-  let arr_to = str_date_to.split('-')
-  let str_to_y = arr_to[0]
-  let str_to_m = arr_to[1]
-  let str_to_d = arr_to[2]
+  let [str_date_from, setFromDate] = useState(
+    getSubStr(new Date().toISOString(), 0, 10)
+  )
+  let [str_date_to, setToDate] = useState(
+    getSubStr(new Date().toISOString(), 0, 10)
+  )
 
   let str_order_by = 'A' /* A:최신순,D:과거순 */
   let str_est_clsfy = '2' /* 1:신규,2:완료,3:리비전 */
@@ -49,6 +35,57 @@ const FormSelect = ({
     )
     setSelectDatas(res.data.data)
     console.log('poststartList :', res.data.data)
+  }
+  //모달 start
+  let style_background_normal = {
+    maxWidth: '70px',
+    marginRight: '7px',
+    backgroundColor: 'gray',
+  }
+  let style_background_hilight = {
+    maxWidth: '70px',
+    marginRight: '7px',
+    backgroundColor: '#113c8a',
+  }
+
+  function setOrderBy(od) {
+    if (od == 'A') {
+      $('#sch_order_asc').css('backgroundColor', 'rgb(17, 60, 138)')
+      $('#sch_order_desc').css('backgroundColor', 'rgb(128, 128, 128)')
+    } else {
+      $('#sch_order_asc').css('backgroundColor', 'rgb(128, 128, 128)')
+      $('#sch_order_desc').css('backgroundColor', 'rgb(17, 60, 138)')
+    }
+  }
+
+  function okSearchSettings() {
+    str_date_from = new Date($('#searchStartDate').val())
+    str_date_to = new Date($('#searchEndDate').val())
+
+    $('#modalDate').fadeOut()
+    getEstimationList('from', 1)
+  }
+
+  //모달 and
+
+  //Refactoring start
+
+  const [str_from_y, str_from_m] = str_date_from.split('-')
+  const [str_to_y, str_to_m] = str_date_to.split('-')
+
+  const timeFilter = a => {
+    console.log('a : ', a)
+    const [year, month, day] = a.EST_REQ_DT.split('-')
+    console.log(+year, +str_from_y)
+    console.log(+month, +str_from_m)
+    console.log(+year, +str_to_y)
+    console.log(+month, +str_to_m)
+    return (
+      +year >= +str_from_y &&
+      +month >= +str_from_m &&
+      +year <= +str_to_y &&
+      +month <= +str_to_m
+    )
   }
 
   const postDataList = async () => {
@@ -65,59 +102,108 @@ const FormSelect = ({
 
   console.log('selectList :', selectList)
   console.log('dd', selectList)
+
+  // let [estim_lastIdx, estim_setLastIdx] = useState(0)
+  // let [estim_list, estim_setInputData] = useState([
+  //   {
+  //     PROJECT: '',
+  //     EST_NO: '',
+  //     M_IL: '',
+  //     REV_NO: '',
+  //   },
+  // ])
+
+  const dateplus = s => {
+    const [year, month, date] = s.split('-')
+    if (+month === 12) {
+      return `${+year + 1}-01-${date}`
+    }
+    return `${year}-${+month + 1}-${date}`
+  }
+
+  const datemiuns = s => {
+    const [year, month, date] = s.split('-')
+    if (+month === 1) {
+      return `${+year - 1}-12-${date}`
+    }
+    return `${year}-${+month - 1}-${date}`
+  }
+
   useEffect(() => {
-    postDataList()
-  }, [])
+    if (+str_from_y < +str_to_y) {
+      postDataList()
+    } else if (+str_from_y === +str_to_y) {
+      if (+str_from_m <= +str_to_m) {
+        postDataList()
+      }
+    }
+  }, [str_date_from, str_date_to])
+
+  async function getEstimationList(target, dir = 0) {
+    const user_id = getValidUserID()
+    if (!user_id) {
+      alert('로그인 후 사용하세요!')
+      return false
+    }
+
+    if (target == 'from') {
+      if (dir === 1) {
+        setFromDate(dateplus)
+      } else {
+        setFromDate(datemiuns)
+      }
+    } else if (target == 'to') {
+      if (dir === 1) {
+        setToDate(dateplus)
+      } else {
+        setToDate(datemiuns)
+      }
+    }
+
+    // if (target == 'from') {
+    //   $("span[id='sch_year_from']").text(arr_from[0] + '년')
+    //   $("span[id='sch_month_from']").text(arr_from[1] + '월')
+    // } else if (target == 'to') {
+    //   $("span[id='sch_year_to']").text(arr_to[0] + '년')
+    //   $("span[id='sch_month_to']").text(arr_to[1] + '월')
+    // }
+
+    // const $ul = $("ul[id='estim_list']")
+    //$ul.append("<li id='estim_0'><div style='text-align:center;'>견적 자료 조회중...</div></li>");
+
+    console.log(1, {
+      사용자: user_id,
+      시작: str_date_from,
+      종료: str_date_to,
+      정렬: str_order_by,
+      구분: str_est_clsfy,
+    })
+  }
+  //Refactoring end
 
   $(function () {
-    $('.btn_back').on('click', function () {
-      window.history.back()
-    })
-
     // 컨텐츠 기본높이
-    function contentHeight() {
-      var headerH = $('header').outerHeight()
-      // var footerH = $("footer").outerHeight();
-      var footerH = $('footer').outerHeight()
-      var warpH = $(window).height() - (headerH + footerH)
-      // $(".wrap").css("min-height", warpH + "px");
-    }
-    setTimeout(function () {
-      contentHeight()
-    }, 100)
-    $(window).on('resize', function () {
-      contentHeight()
-    })
-
-    var mount = 1
-
-    $('.mount_btn .btn_up').on('click', function () {
-      mount += 1
-      $(this).closest('.mount_box').find('input').val(mount)
-    })
-
-    $('.mount_btn .btn_down').on('click', function () {
-      if (mount > 1) {
-        mount -= 1
-        $(this).closest('.mount_box').find('input').val(mount)
-      } else {
-        mount = 1
-      }
-    })
 
     // 모달 ==============
     $('.modal_btn').on('click', function () {
-      var modalID = $(this).attr('data-modal')
+      let modalID = $(this).attr('data-modal')
       $('#' + modalID)
         .fadeIn()
-        .addclassName('modal_show')
+        .addClass('modal_show')
     })
 
     $('.modal .btn_cancle, .btn_modal_cancle').on('click', function () {
-      $(this).closest('.modal').fadeOut().removeclassName('.modal_show')
+      $(this).closest('.modal').fadeOut().removeClass('modal_show')
     })
 
     // datepicker ====================
+
+    // firstDate = new Date(now.getFullYear(), now.getMonth(), 1)
+    // lastDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+
+    // $('#startdate').val($.datepicker.formatDate('yy-mm-dd', firstDate))
+    // $('#enddate').val($.datepicker.formatDate('yy-mm-dd', lastDate))
+
     $.datepicker.setDefaults({
       dateFormat: 'yy-mm-dd', //날짜 포맷이다. 보통 yy-mm-dd 를 많이 사용하는것 같다.
       prevText: '이전 달', // 마우스 오버시 이전달 텍스트
@@ -164,39 +250,43 @@ const FormSelect = ({
       buttonText: 'Select date', // 조그만한 아이콘 툴팁,
       showOn: 'button',
     })
-    $('#searchStartDate').datepicker({})
-    $('#searchEndDate').datepicker({})
+
+    $('#searchStartDate').datepicker()
+    $('#searchEndDate').datepicker()
+
+    // $('#searchStartDate').datepicker('setDate', 'today')
+    // $('#searchEndDate').datepicker('setDate', '+1D')
 
     $('.btn_dateDuration').on('click', function () {
-      var myDuration = $(this).attr('data-duration')
+      let myDuration = $(this).attr('data-duration')
       setSearchDate(myDuration)
     })
 
     function setSearchDate(start) {
-      var num = start.substring(0, 1)
-      var str = start.substring(1, 2)
-      var today = new Date()
+      let num = start.substring(0, 1)
+      let str = start.substring(1, 2)
+      let today = new Date()
 
-      var year = today.getFullYear()
-      var month = today.getMonth() + 1
-      var day = today.getDate()
+      // let year = today.getFullYear()
+      // let month = today.getMonth() + 1
+      // let day = today.getDate()
 
-      var endDate = $.datepicker.formatDate('yy-mm-dd', today)
+      let endDate = $.datepicker.formatDate('yy-mm-dd', today)
       $('#searchEndDate').val(endDate)
 
-      if (str == 'd') {
+      if (str === 'd') {
         today.setDate(today.getDate() - num)
-      } else if (str == 'w') {
+      } else if (str === 'w') {
         today.setDate(today.getDate() - num * 7)
-      } else if (str == 'm') {
+      } else if (str === 'm') {
         today.setMonth(today.getMonth() - num)
         today.setDate(today.getDate() + 1)
-      } else if (str == 'y') {
+      } else if (str === 'y') {
         today.setFullYear(today.getFullYear() - num)
         today.setDate(today.getDate() + 1)
       }
 
-      var startDate = $.datepicker.formatDate('yy-mm-dd', today)
+      let startDate = $.datepicker.formatDate('yy-mm-dd', today)
       $('#searchStartDate').val(startDate)
 
       // 종료일은 시작일 이전 날짜 선택하지 못하도록 비활성화
@@ -207,105 +297,17 @@ const FormSelect = ({
     }
     // 벨브 관련 ====================
 
-    var valveLeng = 1
-    // 벨브추가
-    $('.add_valve').on('click', function (e) {
-      e.preventDefault()
-      valveLeng = valveLeng + 1
-
-      $('.square_box')
-        .find('.plus')
-        .before('<li className="valve_default">' + valveLeng + '</li>')
-
-      if (valveLeng == 2 || valveLeng == 3) {
-        $('.blank_box')[0].remove()
-      }
-      squareBoxW()
-    })
-
     // 벨브 클릭 시
-    $('.square_box').on('click', '.valve_default', function () {
-      $(this).siblings('li').removeclassName('square_active')
-      $(this).addclassName('square_active')
-    })
 
     // 벨브삭제
-    $('.remove_valve').on('click', function (e) {
-      e.preventDefault()
-
-      if (valveLeng > 1) {
-        valveLeng = valveLeng - 1
-        $('.square_box').find('.plus').prev().remove()
-
-        if (valveLeng == 1 || valveLeng == 2) {
-          $('.square_box').append('<li className="blank_box"></li>')
-        }
-        squareBoxW()
-      }
-    })
-    squareBoxW()
 
     // 벨브조절에 따른 넓이변화
-    function squareBoxW() {
-      var liMount = $('.square_box').find('li').length
-      var liW = 23
-      $('.square_box').css('width', liMount * liW)
-    }
-
-    var offset = 0
-    $('.btn_valve_prev').on('click', function (e) {
-      e.preventDefault()
-      if ($('.square_box_wrap').width() < $('.square_box').width()) {
-        if (offset <= 0) {
-          offset = 0
-        } else {
-          offset = offset - $('.square_box_wrap').width()
-        }
-        console.log(offset)
-        $('.square_box').css('transform', 'translateX(' + -offset + 'px)')
-      }
-    })
-    $('.btn_valve_next').on('click', function (e) {
-      e.preventDefault()
-      if ($('.square_box_wrap').width() < $('.square_box').width()) {
-        if (offset < 0) {
-          offset = 0
-        } else if (
-          offset + $('.square_box_wrap').width() >=
-          $('.square_box').width()
-        ) {
-          // 제일 끝에 닿았을 때
-          offset = $('.square_box').width() - $('.square_box_wrap').width()
-        } else {
-          offset = offset + $('.square_box_wrap').width()
-        }
-
-        $('.square_box').css('transform', 'translateX(' + -offset + 'px)')
-      }
-    })
 
     // tag 선택
-    $('.tag_list').on('click', 'li', function () {
-      $(this).siblings('li').removeclassName('tag_active')
-      $(this).addclassName('tag_active')
-    })
 
     // 상세정보 버튼
-    $('.toggle_btn').on('click', function () {
-      var toggleBox = $(this).closest('li').find('.toggle_box')
-      toggleBox.toggleclassName('open_box')
-      if (toggleBox.hasclassName('open_box')) {
-        $(this).find('span').text('간단히')
-        $(this).addclassName('open_btn')
-      } else {
-        $(this).find('span').text('상세정보조회')
-        $(this).removeclassName('open_btn')
-      }
-    })
+
     //  비밀번호 찾기 이메일 주소
-    $('#findIdModal').on('click', function () {
-      $('.find_email').text($('#findID').val())
-    })
   })
 
   let history = useHistory()
@@ -339,16 +341,63 @@ const FormSelect = ({
         <div className="full_wrap_pd cont">
           <div className="flex_box date_box">
             <div className="left_box">
-              <span className="year">2021년</span>
+              <span
+                className="year"
+                id="sch_year_from"
+                style={{ marginRight: '10px' }}
+              >
+                {str_from_y}년
+              </span>
               <div className="swiper_select_box">
-                <button className="prev_btn"></button>
-                <span className="swiper_cont">2월</span>
-                <button className="next_btn"></button>
+                <button
+                  className="prev_btn"
+                  id="btn_prev_from"
+                  onClick={() => getEstimationList('from', -1)}
+                ></button>
+                <span
+                  className="swiper_cont"
+                  id="sch_month_from"
+                  style={{ padding: '0 7px' }}
+                >
+                  {str_from_m}월
+                </span>
+                <button
+                  className="next_btn"
+                  id="btn_next_from"
+                  onClick={() => getEstimationList('from', 1)}
+                ></button>
+              </div>
+              <span style={{ marginLeft: '5px', marginRight: '5px' }}>~</span>
+              <span
+                className="year"
+                id="sch_year_to"
+                style={{ marginRight: '10px' }}
+              >
+                {str_to_y}년
+              </span>
+              <div className="swiper_select_box">
+                <button
+                  className="prev_btn"
+                  id="btn_prev_to"
+                  onClick={() => getEstimationList('to', -1)}
+                ></button>
+                <span
+                  className="swiper_cont"
+                  id="sch_month_to"
+                  style={{ padding: '0 7px' }}
+                >
+                  {str_to_m}월
+                </span>
+                <button
+                  className="next_btn"
+                  id="btn_next_to"
+                  onClick={() => getEstimationList('to', 1)}
+                ></button>
               </div>
             </div>
             <div className="right_box">
+              {/* <!-- 아래버튼에 온클릭버튼을 넣어주고 모달 만들어보기. --> */}
               <button
-                href=""
                 className="btn_cog modal_btn"
                 data-modal="modalDate"
               ></button>
@@ -356,7 +405,7 @@ const FormSelect = ({
           </div>
           <div className="select_list">
             <ul>
-              {selectList.map(list => {
+              {selectList.filter(timeFilter).map(list => {
                 return (
                   <li key={list.EST_NO}>
                     <div className="list_li list_head">
@@ -463,6 +512,7 @@ const FormSelect = ({
                       type="text"
                       id="searchStartDate"
                       className="datepick"
+                      defaultValue={str_date_from}
                     />
                   </div>
                   <span className="dasi">-</span>
@@ -471,16 +521,76 @@ const FormSelect = ({
                       type="text"
                       id="searchEndDate"
                       className="datepick"
+                      defaultValue={str_date_to}
                     />
                   </div>
                 </div>
               </div>
               <div className="cont_group">
                 <div className="modal_subtitle bold">전체조회</div>
-                <div className="all_searchs">
-                  <button className="btn btn_sm">최신순</button>
-                  <button className="btn btn_sm">과거순</button>
-                </div>
+                {(function () {
+                  if (str_order_by == 'A') {
+                    return (
+                      <div className="all_searchs">
+                        <button
+                          className="btn btn_sm"
+                          style={style_background_hilight}
+                          id="sch_order_asc"
+                          onClick={() => setOrderBy('A')}
+                        >
+                          최신순
+                        </button>
+                        <button
+                          className="btn btn_sm"
+                          style={style_background_normal}
+                          id="sch_order_desc"
+                          onClick={() => setOrderBy('D')}
+                        >
+                          과거순
+                        </button>
+                        <div className="btns_center">
+                          <button
+                            className="btn btn_md btn_shadow"
+                            id="btn_setting_ok"
+                            onClick={() => okSearchSettings()}
+                          >
+                            확인
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  } else {
+                    return (
+                      <div className="all_searchs">
+                        <button
+                          className="btn btn_sm"
+                          style={style_background_normal}
+                          id="sch_order_asc"
+                          onClick={() => setOrderBy('A')}
+                        >
+                          최신순
+                        </button>
+                        <button
+                          className="btn btn_sm"
+                          style={style_background_hilight}
+                          id="sch_order_desc"
+                          onClick={() => setOrderBy('D')}
+                        >
+                          과거순
+                        </button>
+                        <div className="btns_center">
+                          <button
+                            className="btn btn_md btn_shadow"
+                            id="btn_setting_ok"
+                            onClick={() => okSearchSettings()}
+                          >
+                            확인
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  }
+                })()}
               </div>
             </div>
           </div>

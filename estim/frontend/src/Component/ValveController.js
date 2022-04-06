@@ -103,7 +103,7 @@ const ValveController = ({
         <div className="right_box">
           <button className="btn_dobleArrow_left btn_valve_prev"></button>
           <div className="square_box_wrap">
-            <ul className="square_box ">
+            <ul className="square_box">
               {Array(maxvalve)
                 .fill(0)
                 .map((_, idx) => {

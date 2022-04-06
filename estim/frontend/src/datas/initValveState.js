@@ -2,9 +2,10 @@ export const initValvestate = {
   CUST_NAME: sessionStorage.getItem('CUST_NAME'),
   PROJECT: sessionStorage.getItem('PROJECT'),
   EST_REQ_EMP: sessionStorage.getItem('REC_NAME'),
-  VALVE: true,
-  BODY_TYPE: null,
-  TAG_NO: '', //API
+  VALVE: true, //Control valve / On-Off Valve
+  BODY_TYPE: null, //Valve Type - 2wayControl Globe
+  // ValveType: null, // angle ~ std.butterfly
+  TAG_NO: '', //Tag 번호
   BODY_SIZE: '6 (1/4")',
   BODY: 'A216-WCB',
   RATING: 'KS(JIS)',
@@ -48,7 +49,6 @@ export const initValvestate = {
   OTHER_REQUEST: '',
   M_ID: sessionStorage.getItem('U_ID'),
   qset: 1, //카운터
-  ValveType: null, // angle ~ std.butterfly
 
   //twoway1: null,
   // select: '',

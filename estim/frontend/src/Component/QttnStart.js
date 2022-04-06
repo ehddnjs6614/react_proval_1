@@ -130,7 +130,7 @@ const QttnStart = ({
             <span>FAX : +82 (0)31-499-0836</span>
           </div>
           <div className="email">
-            Email :{' '}
+            Email :
             <a href="mailto:proval.md@proval.co.kr">proval.md@proval.co.kr</a>
           </div>
         </div>

@@ -279,7 +279,7 @@ li.tag_active .btn_tag {
 
 .square_box li {
   width: 18px;
-  height: 18px;
+  /* height: 18px; */
   flex: 0 0 18px;
   text-align: center;
   line-height: 18px;

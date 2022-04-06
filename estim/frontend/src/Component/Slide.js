@@ -230,20 +230,42 @@ const Slide = ({
       ]
     })
   }
-  const changeValveType = name => async () => {
-    const TAG_NO = await getTag1()
+  // // //수정하는거
+  // const changeValve1Type1 = name => async () => {
+  //   let TAG_NO = null
 
-    setSelectDatas(s => {
-      const currentData = s[selectvalve]
-      return [
-        ...s.slice(0, selectvalve),
-        { ...currentData, ValveType: name, TAG_NO, BODY_TYPE: null },
-        ...s.slice(selectvalve + 1),
-      ]
-    })
-  }
-  const changeValve1Type = name => async () => {
-    const TAG_NO = await getTag()
+  //   if ((name === '2 way', '3 way')) {
+  //     TAG_NO = await getTag()
+  //   } else if ((name === '2 way CB', '3 way CB')) {
+  //     TAG_NO = await getTag1()
+  //   }
+
+  //   setSelectDatas(s => {
+  //     const currentData = s[selectvalve]
+  //     if (TAG_NO === null) {
+  //       return [
+  //         ...s.slice(0, selectvalve),
+  //         { ...currentData, BODY_TYPE: name },
+  //         ...s.slice(selectvalve + 1),
+  //       ]
+  //     }
+  //     return [
+  //       ...s.slice(0, selectvalve),
+  //       { ...currentData, BODY_TYPE: name, TAG_NO },
+  //       ...s.slice(selectvalve + 1),
+  //     ]
+  //   })
+  // }
+  // // //수정하는거
+
+  //control globe
+  const changeValveType = name => async () => {
+    let TAG_NO
+    if (name === 'CG 2 way' || name === 'CG 3 way') {
+      TAG_NO = await getTag()
+    } else {
+      TAG_NO = await getTag1()
+    }
 
     setSelectDatas(s => {
       const currentData = s[selectvalve]
@@ -261,6 +283,20 @@ const Slide = ({
       ]
     })
   }
+
+  // //Conventional Ball
+  // const changeValveType = name => async () => {
+  //   const TAG_NO = await getTag1()
+
+  //   setSelectDatas(s => {
+  //     const currentData = s[selectvalve]
+  //     return [
+  //       ...s.slice(0, selectvalve),
+  //       { ...currentData, ValveType: name, TAG_NO, BODY_TYPE: null },
+  //       ...s.slice(selectvalve + 1),
+  //     ]
+  //   })
+  // }
 
   const changevalvebyname = name => async () => {
     let TAG_NO = null
@@ -639,9 +675,9 @@ const Slide = ({
                             checked={
                               selectData.BODY_TYPE === null
                                 ? false
-                                : selectData.BODY_TYPE === '2 way'
+                                : selectData.BODY_TYPE === 'CG 2 way'
                             }
-                            onChange={changeValve1Type('2 way')}
+                            onChange={changeValveType('CG 2 way')}
                           />
                           <label htmlFor="onoffValve1">2 way</label>
                         </div>
@@ -654,9 +690,9 @@ const Slide = ({
                             checked={
                               selectData.BODY_TYPE === null
                                 ? false
-                                : selectData.BODY_TYPE === '3 way'
+                                : selectData.BODY_TYPE === 'CG 3 way'
                             }
-                            onChange={changeValve1Type('3 way')}
+                            onChange={changeValveType('CG 3 way')}
                           />
                           <label htmlFor="onoffValve2">3 way</label>
                         </div>
@@ -670,9 +706,9 @@ const Slide = ({
                           type="checkbox"
                           id="conrolValve2"
                           checked={
-                            selectData.ValveType === null
+                            selectData.BODY_TYPE === null
                               ? false
-                              : selectData.ValveType === 'Angle'
+                              : selectData.BODY_TYPE === 'Angle'
                           }
                           onChange={changeValveType('Angle')}
                         />
@@ -685,9 +721,9 @@ const Slide = ({
                           type="checkbox"
                           id="conrolValve3"
                           checked={
-                            selectData.ValveType === null
+                            selectData.BODY_TYPE === null
                               ? false
-                              : selectData.ValveType === 'Segmental Ball'
+                              : selectData.BODY_TYPE === 'Segmental Ball'
                           }
                           onChange={changeValveType('Segmental Ball')}
                         />
@@ -700,9 +736,9 @@ const Slide = ({
                           type="checkbox"
                           id="conrolValve4"
                           checked={
-                            selectData.ValveType === null
+                            selectData.BODY_TYPE === null
                               ? false
-                              : selectData.ValveType ===
+                              : selectData.BODY_TYPE ===
                                 'Hi-Performance Butterfly'
                           }
                           onChange={changeValveType('Hi-Performance Butterfly')}
@@ -718,9 +754,9 @@ const Slide = ({
                           type="checkbox"
                           id="conrolValve5"
                           checked={
-                            selectData.ValveType === null
+                            selectData.BODY_TYPE === null
                               ? false
-                              : selectData.ValveType === 'Std. Butterfly'
+                              : selectData.BODY_TYPE === 'Std. Butterfly'
                           }
                           onChange={changeValveType('Std. Butterfly')}
                         />
@@ -737,11 +773,11 @@ const Slide = ({
                             name="conrolValve6"
                             value="conrolValve6"
                             checked={
-                              selectData.ValveType === null
+                              selectData.BODY_TYPE === null
                                 ? false
-                                : selectData.ValveType === '2 way'
+                                : selectData.BODY_TYPE === 'CB 2 way'
                             }
-                            onChange={changeValveType('2 way')}
+                            onChange={changeValveType('CB 2 way')}
                           />
                           <label htmlFor="conrolValve6">2 way</label>
                         </div>
@@ -752,11 +788,11 @@ const Slide = ({
                             name="conrolValve7"
                             value="conrolValve7"
                             checked={
-                              selectData.ValveType === null
+                              selectData.BODY_TYPE === null
                                 ? false
-                                : selectData.ValveType === '3 way'
+                                : selectData.BODY_TYPE === 'CB 3 way'
                             }
-                            onChange={changeValveType('3 way')}
+                            onChange={changeValveType('CB 3 way')}
                           />
                           <label htmlFor="conrolValve7">3 way</label>
                         </div>
