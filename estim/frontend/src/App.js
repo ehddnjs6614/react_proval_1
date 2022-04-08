@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Switch, Route, Router } from 'react-router-dom'
 import AccountMngmn from './Component/AccountMngmn'
-import Calendar from './Component/Calendar'
+
 import Delivery from './Component/Delivery'
 import EstmtCmplt from './Component/EstmtCmplt'
 import Forget from './Component/Forget'
@@ -136,9 +136,6 @@ function App() {
 
         <Route exact path="/test">
           <Test />
-        </Route>
-        <Route exact path="/calendar">
-          <Calendar />
         </Route>
       </Switch>
     </div>

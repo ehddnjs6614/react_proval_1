@@ -1,21 +1,14 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link, useHistory } from 'react-router-dom'
 import logo from '../images/logo.png'
 import $ from 'jquery'
 import 'jquery-ui-dist/jquery-ui'
 import { API_URL } from '../_api/types'
-import {
-  getDateStr,
-  getLastDay,
-  getLastDayStr,
-  getSubStr,
-  getValidUserID,
-} from '../Utils/EstimUtils'
+import { getSubStr, getValidUserID } from '../Utils/EstimUtils'
 import axios from 'axios'
+import ModalDate from './ModalDate'
 
 const FormSelect = ({ setSelectDatas, selectList, setSelectList }) => {
-  const [reload, setReload] = useState(false)
-
   let [str_date_from, setFromDate] = useState(
     getSubStr(new Date().toISOString(), 0, 10)
   )
@@ -49,7 +42,7 @@ const FormSelect = ({ setSelectDatas, selectList, setSelectList }) => {
   }
 
   function setOrderBy(od) {
-    if (od == 'A') {
+    if (od === 'A') {
       $('#sch_order_asc').css('backgroundColor', 'rgb(17, 60, 138)')
       $('#sch_order_desc').css('backgroundColor', 'rgb(128, 128, 128)')
     } else {
@@ -59,11 +52,7 @@ const FormSelect = ({ setSelectDatas, selectList, setSelectList }) => {
   }
 
   function okSearchSettings() {
-    str_date_from = new Date($('#searchStartDate').val())
-    str_date_to = new Date($('#searchEndDate').val())
-
     $('#modalDate').fadeOut()
-    getEstimationList('from', 1)
   }
 
   //모달 and
@@ -146,13 +135,13 @@ const FormSelect = ({ setSelectDatas, selectList, setSelectList }) => {
       return false
     }
 
-    if (target == 'from') {
+    if (target === 'from') {
       if (dir === 1) {
         setFromDate(dateplus)
       } else {
         setFromDate(datemiuns)
       }
-    } else if (target == 'to') {
+    } else if (target === 'to') {
       if (dir === 1) {
         setToDate(dateplus)
       } else {
@@ -251,50 +240,91 @@ const FormSelect = ({ setSelectDatas, selectList, setSelectList }) => {
       showOn: 'button',
     })
 
-    $('#searchStartDate').datepicker()
-    $('#searchEndDate').datepicker()
+    function getDate(element) {
+      var dateFormat = 'yyyy-mm-dd'
+      var date
+      try {
+        console.log('value : ', element.value)
+        date = $.datepicker.parseDate(dateFormat, element.value)
+      } catch (error) {
+        console.log('error', error)
+        date = null
+      }
+      console.log('date : ', date)
+      return date
+    }
+
+    $('#searchStartDate')
+      .datepicker()
+      .on('change', function () {
+        setFromDate(this.value)
+      })
+    $('#searchEndDate')
+      .datepicker()
+      .on('change', function () {
+        setToDate(this.value)
+      })
 
     // $('#searchStartDate').datepicker('setDate', 'today')
     // $('#searchEndDate').datepicker('setDate', '+1D')
 
+    // 달력 개월수 관련 start
     $('.btn_dateDuration').on('click', function () {
       let myDuration = $(this).attr('data-duration')
-      setSearchDate(myDuration)
-    })
-
-    function setSearchDate(start) {
-      let num = start.substring(0, 1)
-      let str = start.substring(1, 2)
-      let today = new Date()
-
-      // let year = today.getFullYear()
-      // let month = today.getMonth() + 1
-      // let day = today.getDate()
-
-      let endDate = $.datepicker.formatDate('yy-mm-dd', today)
-      $('#searchEndDate').val(endDate)
-
-      if (str === 'd') {
-        today.setDate(today.getDate() - num)
-      } else if (str === 'w') {
-        today.setDate(today.getDate() - num * 7)
-      } else if (str === 'm') {
-        today.setMonth(today.getMonth() - num)
-        today.setDate(today.getDate() + 1)
-      } else if (str === 'y') {
-        today.setFullYear(today.getFullYear() - num)
-        today.setDate(today.getDate() + 1)
+      let [num, unit] = myDuration.split('')
+      let plusm = +num
+      if (unit === 'y') {
+        plusm *= 12
       }
+      if (+str_from_m + plusm > 12) {
+        const newDate = `${+str_from_y + 1}-${+str_from_m + plusm - 12}-${
+          str_date_from.split('-')[2]
+        }`
+        console.log('newDate1', newDate)
+        setToDate(newDate)
+        return
+      }
+      const newDate = `${+str_from_y}-${+str_from_m + plusm}-${
+        str_date_from.split('-')[2]
+      }`
+      setToDate(newDate)
+      console.log('newDate', newDate)
+    })
+    // 달력 개월수 관련 end
 
-      let startDate = $.datepicker.formatDate('yy-mm-dd', today)
-      $('#searchStartDate').val(startDate)
+    // function setSearchDate(start) {
+    //   let num = start.substring(0, 1)
+    //   let str = start.substring(1, 2)
+    //   let today = new Date()
 
-      // 종료일은 시작일 이전 날짜 선택하지 못하도록 비활성화
-      $('#searchEndDate').datepicker('option', 'minDate', startDate)
+    //   // let year = today.getFullYear()
+    //   // let month = today.getMonth() + 1
+    //   // let day = today.getDate()
 
-      // 시작일은 종료일 이후 날짜 선택하지 못하도록 비활성화
-      $('#searchStartDate').datepicker('option', 'maxDate', endDate)
-    }
+    //   let endDate = $.datepicker.formatDate('yy-mm-dd', today)
+    //   $('#searchEndDate').val(endDate)
+
+    //   if (str === 'd') {
+    //     today.setDate(today.getDate() - num)
+    //   } else if (str === 'w') {
+    //     today.setDate(today.getDate() - num * 7)
+    //   } else if (str === 'm') {
+    //     today.setMonth(today.getMonth() - num)
+    //     today.setDate(today.getDate() + 1)
+    //   } else if (str === 'y') {
+    //     today.setFullYear(today.getFullYear() - num)
+    //     today.setDate(today.getDate() + 1)
+    //   }
+
+    //   // let startDate = $.datepicker.formatDate('yy-mm-dd', today)
+    //   // $('#searchStartDate').val(startDate)
+
+    //   // // 종료일은 시작일 이전 날짜 선택하지 못하도록 비활성화
+    //   // $('#searchEndDate').datepicker('option', 'minDate', startDate)
+
+    //   // // 시작일은 종료일 이후 날짜 선택하지 못하도록 비활성화
+    //   // $('#searchStartDate').datepicker('option', 'maxDate', endDate)
+    // }
     // 벨브 관련 ====================
 
     // 벨브 클릭 시
@@ -405,50 +435,51 @@ const FormSelect = ({ setSelectDatas, selectList, setSelectList }) => {
           </div>
           <div className="select_list">
             <ul>
-              {selectList.filter(timeFilter).map(list => {
-                return (
-                  <li key={list.EST_NO}>
-                    <div className="list_li list_head">
-                      <div className="table_title">PROJECT</div>
-                      <div className="table_desc">{list.PROJECT}</div>
-                    </div>
-                    <div className="list_middle_box">
-                      <div className="list_middle_left">
-                        <div className="list_li">
-                          <div className="table_title">견적 번호</div>
-                          <div className="table_desc">{list.EST_NO}</div>
-                        </div>
-                        <div className="list_li">
-                          <div className="table_title">견적 요청일</div>
-                          <div className="table_desc">{list.EST_REQ_DT}</div>
-                        </div>
+              {selectList &&
+                selectList.filter(timeFilter).map(list => {
+                  return (
+                    <li key={list.EST_NO}>
+                      <div className="list_li list_head">
+                        <div className="table_title">PROJECT</div>
+                        <div className="table_desc">{list.PROJECT}</div>
                       </div>
-                      <div className="list_middle_right">
-                        <Link
-                          to="/qttnstart"
-                          className="btn btn_wh"
-                          onClick={() =>
-                            poststartList(list.EST_NO, list.REV_NO)
-                          }
-                        >
-                          불러
-                          <br />
-                          오기
-                        </Link>
-                        {/* <a href="qttnStart.html" class="btn btn_wh">
+                      <div className="list_middle_box">
+                        <div className="list_middle_left">
+                          <div className="list_li">
+                            <div className="table_title">견적 번호</div>
+                            <div className="table_desc">{list.EST_NO}</div>
+                          </div>
+                          <div className="list_li">
+                            <div className="table_title">견적 요청일</div>
+                            <div className="table_desc">{list.EST_REQ_DT}</div>
+                          </div>
+                        </div>
+                        <div className="list_middle_right">
+                          <Link
+                            to="/qttnstart"
+                            className="btn btn_wh"
+                            onClick={() =>
+                              poststartList(list.EST_NO, list.REV_NO)
+                            }
+                          >
+                            불러
+                            <br />
+                            오기
+                          </Link>
+                          {/* <a href="qttnStart.html" class="btn btn_wh">
                         불러
                         <br />
                         오기
                       </a> */}
+                        </div>
                       </div>
-                    </div>
-                    <div className="list_li">
-                      <div className="table_title">리비전</div>
-                      <div className="table_desc">{list.REV_NO}</div>
-                    </div>
-                  </li>
-                )
-              })}
+                      <div className="list_li">
+                        <div className="table_title">리비전</div>
+                        <div className="table_desc">{list.REV_NO}</div>
+                      </div>
+                    </li>
+                  )
+                })}
             </ul>
           </div>
         </div>
@@ -470,132 +501,17 @@ const FormSelect = ({ setSelectDatas, selectList, setSelectList }) => {
         </div>
       </footer>
       {/* <!-- modalDate --> */}
-      <div id="modalDate" className="modal">
-        <div className="modal_wrap">
-          <div className="modal_header includ_title">
-            조회옵션
-            <button className="btn_cancle"></button>
-          </div>
-          <div className="modal_body">
-            <div className="modal_cont">
-              <div className="cont_group">
-                <div className="modal_subtitle bold">조회기간</div>
-                <div className="date_btns">
-                  <button
-                    className="btn btn_sm btn_dateDuration"
-                    data-duration="1m"
-                  >
-                    1개월
-                  </button>
-                  <button
-                    className="btn btn_sm btn_dateDuration"
-                    data-duration="3m"
-                  >
-                    3개월
-                  </button>
-                  <button
-                    className="btn btn_sm btn_dateDuration"
-                    data-duration="6m"
-                  >
-                    6개월
-                  </button>
-                  <button
-                    className="btn btn_sm btn_dateDuration"
-                    data-duration="1y"
-                  >
-                    1년
-                  </button>
-                </div>
-                <div className="date_selects">
-                  <div className="datepick_item">
-                    <input
-                      type="text"
-                      id="searchStartDate"
-                      className="datepick"
-                      defaultValue={str_date_from}
-                    />
-                  </div>
-                  <span className="dasi">-</span>
-                  <div className="datepick_item">
-                    <input
-                      type="text"
-                      id="searchEndDate"
-                      className="datepick"
-                      defaultValue={str_date_to}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="cont_group">
-                <div className="modal_subtitle bold">전체조회</div>
-                {(function () {
-                  if (str_order_by == 'A') {
-                    return (
-                      <div className="all_searchs">
-                        <button
-                          className="btn btn_sm"
-                          style={style_background_hilight}
-                          id="sch_order_asc"
-                          onClick={() => setOrderBy('A')}
-                        >
-                          최신순
-                        </button>
-                        <button
-                          className="btn btn_sm"
-                          style={style_background_normal}
-                          id="sch_order_desc"
-                          onClick={() => setOrderBy('D')}
-                        >
-                          과거순
-                        </button>
-                        <div className="btns_center">
-                          <button
-                            className="btn btn_md btn_shadow"
-                            id="btn_setting_ok"
-                            onClick={() => okSearchSettings()}
-                          >
-                            확인
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  } else {
-                    return (
-                      <div className="all_searchs">
-                        <button
-                          className="btn btn_sm"
-                          style={style_background_normal}
-                          id="sch_order_asc"
-                          onClick={() => setOrderBy('A')}
-                        >
-                          최신순
-                        </button>
-                        <button
-                          className="btn btn_sm"
-                          style={style_background_hilight}
-                          id="sch_order_desc"
-                          onClick={() => setOrderBy('D')}
-                        >
-                          과거순
-                        </button>
-                        <div className="btns_center">
-                          <button
-                            className="btn btn_md btn_shadow"
-                            id="btn_setting_ok"
-                            onClick={() => okSearchSettings()}
-                          >
-                            확인
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  }
-                })()}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ModalDate
+        str_date_from={str_date_from}
+        str_date_to={str_date_to}
+        style_background_hilight={style_background_hilight}
+        style_background_normal={style_background_normal}
+        setOrderBy={setOrderBy}
+        okSearchSettings={okSearchSettings}
+        str_order_by={str_order_by}
+        setToDate={setToDate}
+        setFromDate={setFromDate}
+      />
     </div>
   )
 }
